@@ -1,0 +1,441 @@
+{
+  "version": 1,
+  "about": "The strategy catalog for CES. SKILL.md stage 5 (select) compares these entries against the real task and records the closest match; workflow.py validates this file, resolves the chosen id, and applies rubric_emphasis multipliers to the default weights in rubric.md when scoring. min_complexity is the lowest task class where the strategy earns its cost: small tasks follow the plain lifecycle in SKILL.md instead. Edit freely; keep ids unique and run: python3 workflow.py validate",
+  "strategies": [
+    {
+      "id": "focused-change",
+      "name": "Focused change",
+      "matches": "A small, well-understood edit: one function, one message, one configuration value, a copy change, a single handler tweak.",
+      "when": [
+        "the change is contained to one or two files",
+        "behavior and interfaces are already understood",
+        "no data, schema or public contract moves"
+      ],
+      "min_complexity": "small",
+      "stage_focus": {
+        "inspect": "Read only the code on the change path plus its direct callers.",
+        "verify": "Run the most relevant existing check; add a regression test only for a real bug fix."
+      },
+      "verify": [
+        "the smallest relevant existing check passes",
+        "nothing outside the requested scope changed"
+      ],
+      "rubric_emphasis": {
+        "functional_correctness": 1.5,
+        "implementation_complexity": 1.5,
+        "regression_risk": 1.5
+      }
+    },
+    {
+      "id": "bug-investigation",
+      "name": "Bug investigation",
+      "matches": "Something behaves wrongly: an error, a crash, wrong output, a regression after an update, an intermittent failure.",
+      "when": [
+        "the report describes actual behavior that differs from expected behavior",
+        "there is a symptom but no confirmed cause yet",
+        "logs, stack traces or failing tests exist"
+      ],
+      "min_complexity": "small",
+      "stage_focus": {
+        "diagnose": "Reproduce first. Trace the real path from input to output, form one hypothesis at a time, and confirm the first divergence before touching code. Do not patch the symptom.",
+        "implement": "Fix the confirmed cause with the smallest complete change; never hide it behind an unrelated guard, retry or fallback.",
+        "verify": "Re-run the reproduction, add a regression test for the exact failure, and check the paths the fix could disturb."
+      },
+      "verify": [
+        "the original reproduction now passes",
+        "a regression test covers the exact failure",
+        "the fix did not change unrelated behavior"
+      ],
+      "rubric_emphasis": {
+        "root_cause_accuracy": 2.5,
+        "regression_risk": 2.0,
+        "test_coverage": 1.3,
+        "implementation_complexity": 0.5
+      }
+    },
+    {
+      "id": "feature-implementation",
+      "name": "Feature implementation",
+      "matches": "New capability: a new endpoint, command, handler, screen, option or module that the project does not have yet.",
+      "when": [
+        "the request asks for something that does not exist yet",
+        "existing interfaces can be extended rather than rewritten",
+        "acceptance criteria can be stated or inferred"
+      ],
+      "min_complexity": "small",
+      "stage_focus": {
+        "inspect": "Find the seams the feature attaches to: existing routes, handlers, models, conventions and error styles. Reuse them.",
+        "plan": "Cut the feature into milestones that each end in working, verifiable state.",
+        "implement": "Build the narrow feature that satisfies the stated criteria; do not build speculative generality.",
+        "verify": "Test success, invalid input and failure paths; check the feature composes with existing behavior."
+      },
+      "verify": [
+        "stated acceptance criteria are demonstrated one by one",
+        "invalid input and failure paths behave sanely",
+        "existing behavior is untouched"
+      ],
+      "rubric_emphasis": {
+        "requirement_completeness": 1.8,
+        "functional_correctness": 1.4,
+        "root_cause_accuracy": 0.3
+      }
+    },
+    {
+      "id": "refactoring",
+      "name": "Refactoring",
+      "matches": "Restructure without behavior change: extract, rename, reorganize modules, untangle duplication, modernize patterns.",
+      "when": [
+        "behavior is explicitly required to stay the same",
+        "structure, not function, is what the user wants improved",
+        "tests exist or can be pinned down before moving anything"
+      ],
+      "min_complexity": "medium",
+      "stage_focus": {
+        "inspect": "Map the callers and the tests that pin current behavior. If no safety net exists, building one comes before moving anything.",
+        "plan": "Sequence the moves so the project stays working after every step.",
+        "implement": "One mechanical step at a time; no functional change rides along with a refactor.",
+        "verify": "The pre-agreed checks give identical results after every step, not just at the end."
+      },
+      "verify": [
+        "behavior checks are identical before and after",
+        "no unrelated redesign got mixed in",
+        "public interfaces kept compatible unless asked otherwise"
+      ],
+      "rubric_emphasis": {
+        "maintainability": 2.2,
+        "regression_risk": 1.8,
+        "root_cause_accuracy": 0.2
+      }
+    },
+    {
+      "id": "architecture-analysis",
+      "name": "Architecture analysis",
+      "matches": "Understand and assess how the system fits together: module boundaries, data flow, dependency direction, coupling, scaling limits, a written review or diagram.",
+      "when": [
+        "the deliverable is an assessment or a design, not only code",
+        "the question is system-level: boundaries, flow, growth, risk",
+        "a migration, split or rewrite is being considered"
+      ],
+      "min_complexity": "medium",
+      "stage_focus": {
+        "inspect": "Trace real paths end to end: entry points, data ownership, process and deployment boundaries. Evidence beats diagrams.",
+        "plan": "Structure the analysis by question: what exists, what breaks first, what the options cost.",
+        "report": "Separate observed facts from inference, and give recommendations with their trade-offs and migration cost."
+      },
+      "verify": [
+        "every claim traces to code, config or a measured run",
+        "assumptions are labelled as assumptions",
+        "recommendations name costs, not only benefits"
+      ],
+      "rubric_emphasis": {
+        "requirement_completeness": 1.4,
+        "maintainability": 1.5,
+        "test_coverage": 0.2,
+        "implementation_complexity": 0.3
+      }
+    },
+    {
+      "id": "security-review",
+      "name": "Security review",
+      "matches": "Find and fix vulnerabilities: injection, auth flaws, secret handling, unsafe deserialization, access control, supply chain.",
+      "when": [
+        "the user asks for a security audit, hardening or vulnerability analysis",
+        "untrusted input reaches powerful sinks",
+        "authentication, authorization or secret storage is in scope"
+      ],
+      "min_complexity": "medium",
+      "stage_focus": {
+        "inspect": "Enumerate trust boundaries: where untrusted data enters, where it is validated, where credentials live, what each principal may do.",
+        "diagnose": "For each suspected flaw, construct the concrete exploit path or demonstrate it is blocked. No theoretical findings without a path.",
+        "implement": "Fix at the boundary, not by patching one call site; prefer the platform's standard defense over a hand-rolled one.",
+        "verify": "Show the exploit path is closed with a test that fails before the fix and passes after; confirm no authorized behavior broke."
+      },
+      "verify": [
+        "each finding has a concrete path or is rejected with evidence",
+        "fixes do not break legitimate authorized use",
+        "no secrets entered source, logs or the report"
+      ],
+      "rubric_emphasis": {
+        "security": 3.0,
+        "root_cause_accuracy": 1.4,
+        "compatibility": 1.3,
+        "implementation_complexity": 0.4
+      }
+    },
+    {
+      "id": "performance-optimization",
+      "name": "Performance optimization",
+      "matches": "Make it faster or lighter: latency, throughput, memory, startup time, database load, battery, bundle size.",
+      "when": [
+        "a measurable symptom exists or a budget was stated",
+        "hot paths, allocation, I/O or query patterns are suspected",
+        "scaling behavior matters more than micro-tuning"
+      ],
+      "min_complexity": "medium",
+      "stage_focus": {
+        "diagnose": "Measure before optimizing: reproduce the workload, profile, and identify the dominant cost. Optimize what dominates or do nothing.",
+        "implement": "One change per measurement cycle; algorithmic and I/O wins come before micro-tuning.",
+        "verify": "Compare before and after on the same workload and report real numbers, including the variance."
+      },
+      "verify": [
+        "before and after numbers come from the same measured workload",
+        "no correctness, error handling or cleanup was traded away",
+        "the improvement holds under realistic data sizes"
+      ],
+      "rubric_emphasis": {
+        "performance": 3.0,
+        "functional_correctness": 1.4,
+        "regression_risk": 1.4,
+        "implementation_complexity": 0.4
+      }
+    },
+    {
+      "id": "api-integration",
+      "name": "API integration",
+      "matches": "Consume or expose an API: REST, GraphQL, webhooks, third-party SDKs, pagination, auth flows, rate limits, error mapping.",
+      "when": [
+        "the task connects this project to an external or internal API",
+        "requests, schemas, auth, retries or pagination are involved",
+        "an integration is failing in production or a new one is planned"
+      ],
+      "min_complexity": "small",
+      "stage_focus": {
+        "inspect": "Pin the exact API version, endpoint, method, schema and installed client library; consult current official documentation, never an invented endpoint.",
+        "implement": "Handle auth, pagination, timeouts, retries with backoff, rate limits and malformed responses; keep secrets in configuration, never in source or logs.",
+        "verify": "Exercise the real contract against fixtures or a mock; a live call only when authorized, with a timeout and one bounded attempt."
+      },
+      "verify": [
+        "endpoint, method, schema and library version confirmed against current documentation",
+        "timeout, retry, rate limit and error mapping all have explicit behavior",
+        "no secret appears in code, config samples or logs"
+      ],
+      "rubric_emphasis": {
+        "error_handling": 2.0,
+        "security": 1.4,
+        "compatibility": 1.5,
+        "implementation_complexity": 0.4
+      }
+    },
+    {
+      "id": "database-modification",
+      "name": "Database engineering",
+      "matches": "Schema changes, migrations, query work, indexes, transactions, connection handling, data backfill or cleanup.",
+      "when": [
+        "tables, columns, constraints or indexes are created or changed",
+        "queries are slow, wrong or unbounded",
+        "data must be moved, backfilled or cleaned"
+      ],
+      "min_complexity": "medium",
+      "stage_focus": {
+        "inspect": "Read the actual schema, indexes, migration history and data shape; measure the real query plan before judging it.",
+        "plan": "Design migrations that are reversible or at least staged, and state the downtime and lock impact before running anything.",
+        "implement": "Parameterized queries, bounded batches, explicit transactions; no N+1 reads, no unbounded writes.",
+        "verify": "Prove the migration on a copy of realistic data, including rollback; destructive or production changes only with explicit approval."
+      },
+      "verify": [
+        "migration and its rollback proven on realistic data",
+        "no unbounded query, N+1 pattern or missing index on the hot path",
+        "production data touched only after explicit approval"
+      ],
+      "rubric_emphasis": {
+        "functional_correctness": 1.6,
+        "performance": 1.5,
+        "regression_risk": 1.8,
+        "security": 1.2
+      }
+    },
+    {
+      "id": "telegram-bot-development",
+      "name": "Telegram bot development",
+      "matches": "Building or fixing Telegram bots and userbots: handlers, filters, callbacks, sessions, FloodWait, media flows, bulk automation.",
+      "when": [
+        "Pyrogram, Telethon, Bot API or a fork is in the stack",
+        "message handlers, media groups, file transfers or bot commands are involved",
+        "automation pipelines download, rename, encode or upload media"
+      ],
+      "min_complexity": "medium",
+      "stage_focus": {
+        "inspect": "Identify library and fork versions, session type, handler registration order and filter overlap; trace the complete update-to-response path.",
+        "diagnose": "For media problems, follow the whole flow: download, process, metadata, caption, thumbnail, upload, edit. An isolated function is rarely the cause.",
+        "implement": "Preserve file IDs, thumbnails, captions, dimensions, duration, MIME type, grouping and ordering unless the task changes them. Handle FloodWait with the server's own wait time, bounded retries and explicit peer resolution.",
+        "verify": "Test single item, bulk, missing metadata, duplicate delivery, partial failure and recovery; never against production chats."
+      },
+      "verify": [
+        "captions, thumbnails and media metadata survive the full flow",
+        "FloodWait, retries and duplicate updates are handled with bounds",
+        "handler order and filter overlap checked against the real update types"
+      ],
+      "rubric_emphasis": {
+        "functional_correctness": 1.6,
+        "error_handling": 1.6,
+        "performance": 1.2,
+        "implementation_complexity": 0.4
+      }
+    },
+    {
+      "id": "media-processing",
+      "name": "Media processing pipeline",
+      "matches": "FFmpeg, FFprobe, aria2, yt-dlp, rclone, qBittorrent work: download, convert, encode, extract metadata, stream, move large files.",
+      "when": [
+        "audio, video, image or subtitle files are transformed or transported",
+        "pipeline stages feed each other and must survive interruption",
+        "large files, temporary storage or disk ceilings are involved"
+      ],
+      "min_complexity": "medium",
+      "stage_focus": {
+        "inspect": "Probe real inputs with ffprobe or equivalent: codecs, dimensions, duration, streams, bitrates. Never assume a container's contents.",
+        "plan": "Design for interruption: stage to temporary files, atomic renames, resumable downloads, bounded disk usage, cleanup on failure.",
+        "implement": "Stream or bounded-buffer; never load a large media file whole into memory. Set explicit timeouts and concurrency limits.",
+        "verify": "Verify outputs by probing them, not by trusting exit codes: container, streams, duration, metadata and playable head and tail."
+      },
+      "verify": [
+        "output probed and playable, not just exit code zero",
+        "interrupted runs resume or clean up, never leave half-written outputs",
+        "disk and memory stay bounded on the largest expected input"
+      ],
+      "rubric_emphasis": {
+        "functional_correctness": 1.6,
+        "performance": 1.5,
+        "error_handling": 1.5,
+        "implementation_complexity": 0.3
+      }
+    },
+    {
+      "id": "deployment-troubleshooting",
+      "name": "Deployment troubleshooting",
+      "matches": "Works locally, broken in deployment: Docker, VPS, platform hosting, reverse proxies, ports, environment, build systems, health checks.",
+      "when": [
+        "the difference between environments is the problem",
+        "build, startup, networking or platform configuration is involved",
+        "logs show crashes, refused connections or wrong versions"
+      ],
+      "min_complexity": "medium",
+      "stage_focus": {
+        "inspect": "Trace build artifact to image to startup command to environment to port binding to proxy routing. Compare configured values with actual ones.",
+        "diagnose": "Read the real logs from the failing environment; reproduce locally or in staging before proposing a fix.",
+        "verify": "Verify in the target environment, including restart and health checks; a local pass is not proof."
+      },
+      "verify": [
+        "health check green in the target environment after a restart",
+        "environment variables, ports and paths confirmed where the process actually runs",
+        "no production restart or migration without explicit authorization"
+      ],
+      "rubric_emphasis": {
+        "root_cause_accuracy": 1.6,
+        "functional_correctness": 1.3,
+        "regression_risk": 1.3,
+        "test_coverage": 0.3
+      }
+    },
+    {
+      "id": "frontend-engineering",
+      "name": "Frontend engineering",
+      "matches": "UI work: components, state, forms, routing, accessibility, responsive behavior, API wiring, loading and error states.",
+      "when": [
+        "components, pages or client state are built or fixed",
+        "rendered output differs from expected behavior",
+        "data fetching, caching or form handling is involved"
+      ],
+      "min_complexity": "small",
+      "stage_focus": {
+        "inspect": "Trace the component path: state, events, requests, store updates, render. Follow the project's existing design tokens and conventions.",
+        "implement": "Cover loading, empty, error and success states; keep the accessible semantics the framework gives you; do not redesign unrelated UI.",
+        "verify": "Exercise the real interaction: keyboard, focus, slow network, failed request and empty data."
+      },
+      "verify": [
+        "loading, empty, error and success states all behave",
+        "keyboard and focus behavior preserved or added",
+        "no unrelated visual or layout changes"
+      ],
+      "rubric_emphasis": {
+        "functional_correctness": 1.5,
+        "requirement_completeness": 1.4,
+        "compatibility": 1.3,
+        "implementation_complexity": 0.5
+      }
+    },
+    {
+      "id": "scraping-data-extraction",
+      "name": "Scraping and data extraction",
+      "matches": "Fetch and extract data: HTTP clients, HTML parsing, JSON APIs, pagination, sessions, async fetching, deduplication, storage.",
+      "when": [
+        "data must be pulled from websites or services the user has legitimate access to",
+        "parsing, normalization, deduplication or export pipelines are involved",
+        "pagination, sessions or rate limits are in play"
+      ],
+      "min_complexity": "medium",
+      "stage_focus": {
+        "inspect": "Confirm the access method is permitted and authorized: target, scope, terms, credentials. Respect robots, rate limits and access controls.",
+        "plan": "Finite pages, bounded concurrency, explicit stop conditions; parse from saved fixtures before any live request.",
+        "implement": "Finite timeouts, conservative pacing, bounded response sizes, validation and deduplication at the storage boundary.",
+        "verify": "Parse real saved fixtures first; then a small live run with limits before any bulk run."
+      },
+      "verify": [
+        "parsing proven against saved real fixtures",
+        "timeouts, pacing, concurrency and stop conditions all bounded",
+        "access is authorized; nothing exceeded the permitted scope"
+      ],
+      "rubric_emphasis": {
+        "functional_correctness": 1.4,
+        "error_handling": 1.6,
+        "security": 1.3,
+        "test_coverage": 1.2
+      }
+    },
+    {
+      "id": "complex-multi-stage",
+      "name": "Complex multi-stage project",
+      "matches": "Several subsystems change together: feature plus migration plus deployment, protocol changes across services, multi-session builds.",
+      "when": [
+        "no single strategy covers the whole task",
+        "the work spans days, sessions or subsystems",
+        "an integration boundary between in-repo and external parts must hold"
+      ],
+      "min_complexity": "complex",
+      "stage_focus": {
+        "classify": "Split the work into independently verifiable phases and pick the best strategy for each phase as you reach it.",
+        "plan": "Milestones are mandatory; each one ends in a state another session could take over.",
+        "implement": "Keep the state file current after every milestone; treat it as the handoff contract.",
+        "verify": "Verify each milestone on its own before building on it; integration checks ride on top, not instead."
+      },
+      "verify": [
+        "each milestone verified before the next starts",
+        "state file accurate enough to resume from cold",
+        "integration boundaries tested with both sides in place"
+      ],
+      "rubric_emphasis": {
+        "requirement_completeness": 1.4,
+        "maintainability": 1.4,
+        "regression_risk": 1.4,
+        "error_handling": 1.3
+      }
+    },
+    {
+      "id": "code-review",
+      "name": "Code review",
+      "matches": "Judge someone else's change: a diff, a pull request, a candidate implementation, or two competing approaches to one task.",
+      "when": [
+        "the deliverable is an assessment of existing code",
+        "candidate solutions must be compared and one chosen",
+        "a change is about to merge and needs a decision"
+      ],
+      "min_complexity": "small",
+      "stage_focus": {
+        "inspect": "Read the diff with its surroundings: callers, tests, config the code assumes. Never review a diff in isolation.",
+        "evaluate": "Score with the rubric command using the change's own strategy when it maps to one. Report concrete findings with file, line, impact and evidence.",
+        "report": "Separate blocking findings from preferences; say plainly which is which and what would change the verdict."
+      },
+      "verify": [
+        "every finding carries file, location and concrete impact",
+        "claimed bugs are demonstrated or clearly labelled unverified",
+        "no style preference reported as a defect"
+      ],
+      "rubric_emphasis": {
+        "root_cause_accuracy": 1.4,
+        "security": 1.4,
+        "regression_risk": 1.5,
+        "implementation_complexity": 1.2
+      }
+    }
+  ]
+}
