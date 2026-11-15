@@ -151,4 +151,4 @@ and compact five-file generations).
 
 ## License
 
-Apache-2.0. See [LICENSE](LICENSE).
+MIT-License. See [LICENSE](LICENSE).
