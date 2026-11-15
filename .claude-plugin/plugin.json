@@ -1,0 +1,22 @@
+{
+  "name": "ces",
+  "description": "CES - Coding Expert System: an eleven-stage engineering lifecycle for coding agents. Understands and classifies the task, inspects the real project, diagnoses the first confirmed divergence, selects a fitting strategy from a sixteen-entry catalog, plans milestones for complex work, implements the smallest complete change, verifies with real checks, scores the result against a twelve-dimension rubric and reviews the final diff.",
+  "version": "3.0.0",
+  "author": {
+    "name": "IamElite",
+    "url": "https://github.com/IamElite"
+  },
+  "homepage": "https://github.com/IamElite/ces",
+  "repository": "https://github.com/IamElite/ces",
+  "license": "Apache-2.0",
+  "keywords": [
+    "software-engineering",
+    "workflow",
+    "lifecycle",
+    "code-review",
+    "debugging",
+    "planning",
+    "rubric",
+    "verification"
+  ]
+}
