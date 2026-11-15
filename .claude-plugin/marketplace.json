@@ -1,0 +1,34 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "ces",
+  "description": "CES - Coding Expert System: an agent skill that runs a full engineering lifecycle for software work.",
+  "owner": {
+    "name": "IamElite",
+    "url": "https://github.com/IamElite"
+  },
+  "metadata": {
+    "description": "CES - Coding Expert System: an agent skill that runs a full engineering lifecycle for software work.",
+    "version": "3.0.0"
+  },
+  "plugins": [
+    {
+      "name": "ces",
+      "source": "./",
+      "description": "CES - Coding Expert System: an eleven-stage engineering lifecycle for coding agents, with a sixteen-strategy catalog, resumable state and a twelve-dimension quality rubric.",
+      "version": "3.0.0",
+      "author": {
+        "name": "IamElite",
+        "url": "https://github.com/IamElite"
+      },
+      "homepage": "https://github.com/IamElite/ces",
+      "license": "Apache-2.0",
+      "keywords": [
+        "software-engineering",
+        "workflow",
+        "lifecycle",
+        "code-review"
+      ],
+      "category": "development"
+    }
+  ]
+}
