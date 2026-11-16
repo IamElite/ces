@@ -533,8 +533,9 @@ class PluginMetadata(unittest.TestCase):
 
     def test_readme(self):
         self.assertIn("**Version:** %s" % EXPECTED_VERSION, self.readme)
-        self.assertIn("npx skills add https://github.com/IamElite/ces/tree/main/skills/ces -g", self.readme)
-        self.assertIn("npx skills update ces -g", self.readme)
+        self.assertIn("npx skills add https://github.com/IamElite/ces/tree/dev/skills/ces --agent opencode --copy --yes", self.readme)
+        self.assertIn(".agents/skills/ces/", self.readme)
+        self.assertIn("npx skills update ces --yes", self.readme)
         self.assertIn("python -m unittest discover -s tests -v", self.readme)
         self.assertIn("workflow.py", self.readme)
         self.assertIn("strategies.json", self.readme)
