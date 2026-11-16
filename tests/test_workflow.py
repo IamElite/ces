@@ -89,7 +89,7 @@ class SkillPackage(unittest.TestCase):
         cls.skill = read(os.path.join(SKILL_DIR, "SKILL.md"))
 
     def test_skill_files_are_exactly_the_architecture(self):
-        files = sorted(os.listdir(SKILL_DIR))
+        files = sorted(name for name in os.listdir(SKILL_DIR) if name != "__pycache__")
         self.assertEqual(files, ["SKILL.md", "rubric.md", "strategies.json", "workflow.py"])
 
     def test_frontmatter(self):
@@ -403,6 +403,17 @@ class StateIntegrity(TempDir):
         self.fails("complete", "--force", "--dir", d)
         self.assertTrue(os.path.isfile(os.path.join(d, ".ces", "workflow.json")))
         self.assertFalse(os.path.exists(os.path.join(d, ".ces", "archive")))
+
+    def test_complete_refuses_open_optional_stages_too(self):
+        d = self.tmp
+        self.ok("init", "--task", "open optional stage", "--complexity", "medium", "--dir", d)
+        state = load_state(d)
+        for stage in W.CORE_STAGES["medium"]:
+            state["stages"][stage]["state"] = "done"
+        W.save_state(state)
+        err = self.fails("complete", "--dir", d)
+        self.assertIn("lifecycle stage(s) remain open", err)
+        self.assertTrue(os.path.isfile(os.path.join(d, ".ces", "workflow.json")))
 
     def test_state_cannot_redirect_writes_to_another_project(self):
         d = self.tmp

@@ -816,6 +816,13 @@ def cmd_complete(args):
             "--force only overrides open blockers, not lifecycle requirements."
             % ", ".join(unfinished)
         )
+    open_stages = [stage for stage in STAGES if stage_status(state, stage) == "open"]
+    if open_stages:
+        raise WorkflowError(
+            "cannot complete: lifecycle stage(s) remain open: %s. Close or explicitly skip "
+            "optional stages before archiving."
+            % ", ".join(open_stages)
+        )
     open_blockers = [b for b in state["blockers"] if not b["resolved"]]
     if open_blockers and not args.force:
         for b in open_blockers:
