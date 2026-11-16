@@ -151,4 +151,4 @@ and compact five-file generations).
 
 ## License
 
-MIT-License. See [LICENSE](LICENSE).
+MIT License. See [LICENSE](LICENSE).

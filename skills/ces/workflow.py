@@ -251,8 +251,8 @@ def _read_json(path):
         return json.load(fh)
 
 
-def _validate_state(state, source):
-    """Structural validation. source names the file for error messages."""
+def _validate_state(state, source, expected_dir=None):
+    """Validate both the shape and the project ownership of persisted state."""
     if not isinstance(state, dict):
         raise WorkflowError("%s does not contain a state object" % source)
     if state.get("version") != STATE_VERSION:
@@ -260,27 +260,100 @@ def _validate_state(state, source):
             "%s has state version %s; this tool understands version %s"
             % (source, state.get("version"), STATE_VERSION)
         )
-    task = state.get("task")
-    if not isinstance(task, str) or not task.strip():
-        raise WorkflowError("%s has no task text" % source)
+
+    def text_value(value, label, allow_none=False):
+        if allow_none and value is None:
+            return
+        if not isinstance(value, str) or not value.strip():
+            raise WorkflowError("%s in %s must be a non-empty string" % (label, source))
+        guard_text(label, value)
+
+    text_value(state.get("task"), "task")
     if state.get("complexity") not in ("medium", "complex"):
         raise WorkflowError("%s has an invalid complexity %r" % (source, state.get("complexity")))
+
+    stored_dir = state.get("dir")
+    text_value(stored_dir, "state directory")
+    stored_dir = os.path.abspath(stored_dir)
+    if expected_dir is not None:
+        expected_dir = os.path.abspath(expected_dir)
+        if os.path.normcase(stored_dir) != os.path.normcase(expected_dir):
+            raise WorkflowError(
+                "%s belongs to project %s, not %s; refusing to write outside the requested project"
+                % (source, stored_dir, expected_dir)
+            )
+    state["dir"] = stored_dir
+
+    for field in ("created", "updated"):
+        text_value(state.get(field), field)
+
     stages = state.get("stages")
     if not isinstance(stages, dict) or set(stages) != set(STAGES):
         raise WorkflowError("%s does not track exactly the eleven lifecycle stages" % source)
     for name, entry in stages.items():
         if not isinstance(entry, dict) or entry.get("state") not in ("open", "done", "skip"):
             raise WorkflowError("%s has an invalid status for stage '%s'" % (source, name))
-    for field in ("requirements", "findings", "decisions", "files_changed", "verifications",
-                  "milestones", "remaining", "blockers"):
+        text_value(entry.get("note"), "stage %s note" % name, allow_none=True)
+
+    for field in (
+        "requirements", "findings", "decisions", "files_changed", "verifications",
+        "milestones", "remaining", "blockers",
+    ):
         value = state.get(field)
         if value is None:
             state[field] = []
         elif not isinstance(value, list):
             raise WorkflowError("%s field '%s' must be a list" % (source, field))
-    if state.get("strategy") is not None:
-        data = load_strategies()
-        strategy_by_id(data, state["strategy"])
+
+    for index, item in enumerate(state["requirements"]):
+        text_value(item, "requirement #%d" % (index + 1))
+
+    for index, item in enumerate(state["findings"]):
+        label = "finding #%d" % (index + 1)
+        if not isinstance(item, dict) or item.get("kind") not in FINDING_KINDS:
+            raise WorkflowError("%s has an invalid %s record" % (source, label))
+        text_value(item.get("text"), label)
+        text_value(item.get("evidence"), label + " evidence", allow_none=True)
+        text_value(item.get("time"), label + " time")
+
+    for index, item in enumerate(state["decisions"]):
+        label = "decision #%d" % (index + 1)
+        if not isinstance(item, dict):
+            raise WorkflowError("%s has an invalid %s record" % (source, label))
+        text_value(item.get("choice"), label + " choice")
+        text_value(item.get("reason"), label + " reason")
+        text_value(item.get("time"), label + " time")
+
+    for index, item in enumerate(state["files_changed"]):
+        text_value(item, "changed file #%d" % (index + 1))
+
+    for index, item in enumerate(state["verifications"]):
+        label = "verification #%d" % (index + 1)
+        if not isinstance(item, dict) or item.get("result") not in VERIFY_RESULTS:
+            raise WorkflowError("%s has an invalid %s record" % (source, label))
+        text_value(item.get("command"), label + " command")
+        text_value(item.get("notes"), label + " notes", allow_none=True)
+        text_value(item.get("time"), label + " time")
+
+    for field in ("milestones", "remaining"):
+        for index, item in enumerate(state[field]):
+            label = "%s #%d" % (field, index + 1)
+            if not isinstance(item, dict) or not isinstance(item.get("done"), bool):
+                raise WorkflowError("%s has an invalid %s record" % (source, label))
+            text_value(item.get("text"), label)
+            text_value(item.get("time"), label + " time")
+
+    for index, item in enumerate(state["blockers"]):
+        label = "blocker #%d" % (index + 1)
+        if not isinstance(item, dict) or not isinstance(item.get("resolved"), bool):
+            raise WorkflowError("%s has an invalid %s record" % (source, label))
+        text_value(item.get("text"), label)
+        text_value(item.get("time"), label + " time")
+
+    strategy = state.get("strategy")
+    if strategy is not None:
+        text_value(strategy, "strategy")
+        strategy_by_id(load_strategies(), strategy)
     return state
 
 
@@ -295,7 +368,7 @@ def load_state(project_dir):
         )
     try:
         state = _read_json(path)
-    except (OSError, ValueError) as exc:
+    except (OSError, ValueError, UnicodeError) as exc:
         hint = ""
         if os.path.isfile(paths["backup"]):
             hint = " A backup from the previous write exists at %s." % paths["backup"]
@@ -304,7 +377,7 @@ def load_state(project_dir):
             "quarantine it with: python3 %s recover --dir %s.%s"
             % (path, exc, SELF, project_dir, hint)
         )
-    return _validate_state(state, path)
+    return _validate_state(state, path, expected_dir=project_dir)
 
 
 def _write_atomic(path, content):
@@ -519,6 +592,16 @@ def cmd_update(args):
     state = load_state(args.dir)
     if args.stage not in STAGES:
         raise WorkflowError("unknown stage '%s'. Stages: %s" % (args.stage, ", ".join(STAGES)))
+    current = current_stage(state)
+    if current is None:
+        raise WorkflowError("all lifecycle stages are already closed")
+    if args.stage != current:
+        raise WorkflowError(
+            "stages must close in order; the current open stage is '%s', not '%s'"
+            % (current, args.stage)
+        )
+    if args.strategy and args.stage != "select":
+        raise WorkflowError("--strategy can only be recorded while closing the select stage")
     entry = state["stages"][args.stage]
     if entry["state"] != "open":
         raise WorkflowError(
@@ -529,8 +612,10 @@ def cmd_update(args):
         if not (args.note or "").strip():
             raise WorkflowError("skipping a stage requires --note stating why it does not apply")
         if args.stage in CORE_STAGES[state["complexity"]]:
-            print("note: '%s' is a core stage for a %s task; the skip is recorded in the state."
-                  % (args.stage, state["complexity"]))
+            raise WorkflowError(
+                "stage '%s' is mandatory for a %s task and cannot be skipped"
+                % (args.stage, state["complexity"])
+            )
         entry["state"] = "skip"
     else:
         entry["state"] = "done"
@@ -723,6 +808,14 @@ def cmd_resume(args):
 
 def cmd_complete(args):
     state = load_state(args.dir)
+    required = CORE_STAGES[state["complexity"]]
+    unfinished = [stage for stage in required if stage_status(state, stage) != "done"]
+    if unfinished:
+        raise WorkflowError(
+            "cannot complete: mandatory stage(s) are not done: %s. Close them in order; "
+            "--force only overrides open blockers, not lifecycle requirements."
+            % ", ".join(unfinished)
+        )
     open_blockers = [b for b in state["blockers"] if not b["resolved"]]
     if open_blockers and not args.force:
         for b in open_blockers:
@@ -839,13 +932,25 @@ def cmd_validate(args):
     if args.project:
         paths = state_paths(args.project)
         if os.path.isfile(paths["state"]):
-            _validate_state(_read_json(paths["state"]), paths["state"])
+            _validate_state(_read_json(paths["state"]), paths["state"], expected_dir=args.project)
             print("state in %s is valid" % args.project)
     with open(RUBRIC_PATH, encoding="utf-8") as fh:
         rubric = fh.read()
     if not rubric.strip():
         raise WorkflowError("rubric.md is empty")
-    print("strategies.json and rubric.md are valid; default weights sum to %d" % round(total))
+    rubric_weights = []
+    for line in rubric.splitlines():
+        if not line.startswith("|"):
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if len(cells) >= 2 and cells[0] in RUBRIC_DIMENSIONS:
+            try:
+                rubric_weights.append((cells[0], int(cells[1])))
+            except ValueError:
+                raise WorkflowError("rubric.md has a non-integer weight for '%s'" % cells[0])
+    if rubric_weights != list(RUBRIC_WEIGHTS):
+        raise WorkflowError("rubric.md weights or order do not match workflow.py RUBRIC_WEIGHTS")
+    print("strategies.json and rubric.md are valid and synchronized; default weights sum to %d" % round(total))
     return 0
 
 
@@ -855,11 +960,12 @@ def cmd_recover(args):
     if not os.path.isfile(path):
         raise WorkflowError("there is no %s to recover" % path)
     try:
-        _read_json(path)
-    except (OSError, ValueError):
+        recovered_state = _read_json(path)
+        _validate_state(recovered_state, path, expected_dir=args.dir)
+    except (OSError, ValueError, UnicodeError, WorkflowError):
         pass
     else:
-        raise WorkflowError("%s parses fine; there is nothing to recover. Inspect it with status." % path)
+        raise WorkflowError("%s parses and validates; there is nothing to recover. Inspect it with status." % path)
     quarantine = path + ".corrupt-%s" % time.strftime("%Y%m%d-%H%M%S")
     os.replace(path, quarantine)
     print("quarantined the corrupted state to %s" % quarantine)

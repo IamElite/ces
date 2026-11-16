@@ -255,13 +255,10 @@ class FullLifecycle(TempDir):
         self.assertEqual(state["strategy"], "telegram-bot-development")
         self.assertIn("strategy: telegram-bot-development", state["decisions"][0]["choice"])
 
-        # Skipping a core stage on a complex task records a warning but works with a note.
-        out = self.ok("update", "plan", "--state", "skip",
-                      "--note", "single-stage fix, no milestones needed", "--dir", d)
-        state = load_state(d)
-        self.assertEqual(state["stages"]["plan"]["state"], "skip")
-        out = self.ok("status", "--dir", d)
-        self.assertIn("core stage(s) skipped", out)
+        self.ok("milestone", "reproduce the thumbnail loss", "--dir", d)
+        self.ok("milestone", "--done", 1, "--dir", d)
+        self.ok("update", "plan", "--state", "done",
+                "--note", "the fix and regression test are sequenced", "--dir", d)
 
         self.ok("file", "bot/upload.py", "--dir", d)
         self.ok("file", "bot/upload.py", "--dir", d)  # idempotent
@@ -363,18 +360,25 @@ class Guards(TempDir):
         for argv in (("next",), ("status",), ("resume",), ("complete",), ("update", "inspect", "--state", "done")):
             self.fails(*(argv + ("--dir", self.tmp)))
 
-    def test_lifecycle_never_moves_backward(self):
+    def test_lifecycle_moves_only_forward_one_stage_at_a_time(self):
         d = self.tmp
         self.ok("init", "--task", "x", "--complexity", "medium", "--dir", d)
+        self.fails("update", "classify", "--state", "done", "--dir", d)
+        self.assertEqual(load_state(d)["stages"]["understand"]["state"], "open")
         self.ok("update", "understand", "--state", "done", "--dir", d)
         self.fails("update", "understand", "--state", "done", "--dir", d)
+        self.fails("update", "inspect", "--state", "done", "--dir", d)
         self.fails("update", "nonexistent-stage", "--state", "done", "--dir", d)
 
-    def test_skip_requires_a_note(self):
+    def test_skip_requires_a_note_and_only_optional_stages_can_be_skipped(self):
         d = self.tmp
         self.ok("init", "--task", "x", "--complexity", "medium", "--dir", d)
+        self.fails("update", "understand", "--state", "skip", "--note", "try to skip a core stage", "--dir", d)
         self.fails("update", "diagnose", "--state", "skip", "--dir", d)
+        for stage in ("understand", "classify", "inspect"):
+            self.ok("update", stage, "--state", "done", "--dir", d)
         self.ok("update", "diagnose", "--state", "skip", "--note", "not a bug, a feature", "--dir", d)
+        self.assertEqual(load_state(d)["stages"]["diagnose"]["state"], "skip")
 
     def test_private_keys_are_refused_and_state_unchanged(self):
         d = self.tmp
@@ -392,6 +396,43 @@ class Guards(TempDir):
 
 
 class StateIntegrity(TempDir):
+    def test_complete_refuses_open_core_stages_even_with_force(self):
+        d = self.tmp
+        self.ok("init", "--task", "incomplete work", "--complexity", "medium", "--dir", d)
+        self.fails("complete", "--dir", d)
+        self.fails("complete", "--force", "--dir", d)
+        self.assertTrue(os.path.isfile(os.path.join(d, ".ces", "workflow.json")))
+        self.assertFalse(os.path.exists(os.path.join(d, ".ces", "archive")))
+
+    def test_state_cannot_redirect_writes_to_another_project(self):
+        d = self.tmp
+        outside = os.path.join(d, "other-project")
+        os.makedirs(outside)
+        self.ok("init", "--task", "path binding", "--complexity", "medium", "--dir", d)
+        path = os.path.join(d, ".ces", "workflow.json")
+        state = load_state(d)
+        state["dir"] = outside
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(state, fh)
+        err = self.fails("update", "understand", "--state", "done", "--dir", d)
+        self.assertIn("refusing to write outside", err)
+        self.assertFalse(os.path.exists(os.path.join(outside, ".ces")))
+
+    def test_semantically_corrupt_state_can_be_quarantined(self):
+        d = self.tmp
+        self.ok("init", "--task", "semantic recovery", "--complexity", "medium", "--dir", d)
+        path = os.path.join(d, ".ces", "workflow.json")
+        state = load_state(d)
+        state["blockers"] = [{}]
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(state, fh)
+        err = self.fails("status", "--dir", d)
+        self.assertIn("invalid blocker", err)
+        out = self.ok("recover", "--dir", d)
+        self.assertIn("quarantined", out)
+        self.assertFalse(os.path.exists(path))
+        self.assertTrue(any(".corrupt-" in name for name in os.listdir(os.path.join(d, ".ces"))))
+
     def test_backup_lags_one_write_behind(self):
         d = self.tmp
         self.ok("init", "--task", "x", "--complexity", "medium", "--dir", d)
@@ -458,7 +499,7 @@ class PluginMetadata(unittest.TestCase):
     def test_plugin_json(self):
         self.assertEqual(self.plugin["name"], "ces")
         self.assertEqual(self.plugin["version"], EXPECTED_VERSION)
-        self.assertEqual(self.plugin["license"], "Apache-2.0")
+        self.assertEqual(self.plugin["license"], "MIT")
         self.assertEqual(self.plugin["repository"], "https://github.com/IamElite/ces")
         self.assertTrue(self.plugin["description"].strip())
         self.assertTrue(self.plugin["keywords"])
@@ -472,6 +513,7 @@ class PluginMetadata(unittest.TestCase):
         self.assertEqual(entry["name"], "ces")
         self.assertEqual(entry["source"], "./")
         self.assertTrue(entry["description"].strip())
+        self.assertEqual(entry["license"], "MIT")
 
     def test_skill_folder_matches_metadata(self):
         self.assertTrue(os.path.isfile(os.path.join(REPO, "skills", "ces", "SKILL.md")))
@@ -486,6 +528,7 @@ class PluginMetadata(unittest.TestCase):
         self.assertIn("workflow.py", self.readme)
         self.assertIn("strategies.json", self.readme)
         self.assertIn("rubric.md", self.readme)
+        self.assertIn("MIT License. See", self.readme)
 
     def test_gitignore_excludes_state_but_not_sources(self):
         gi = read(os.path.join(REPO, ".gitignore"))
