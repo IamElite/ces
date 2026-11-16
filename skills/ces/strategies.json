@@ -48,7 +48,7 @@
       ],
       "rubric_emphasis": {
         "root_cause_accuracy": 2.5,
-        "regression_risk": 2.0,
+        "regression_risk": 2,
         "test_coverage": 1.3,
         "implementation_complexity": 0.5
       }
@@ -156,7 +156,7 @@
         "no secrets entered source, logs or the report"
       ],
       "rubric_emphasis": {
-        "security": 3.0,
+        "security": 3,
         "root_cause_accuracy": 1.4,
         "compatibility": 1.3,
         "implementation_complexity": 0.4
@@ -183,7 +183,7 @@
         "the improvement holds under realistic data sizes"
       ],
       "rubric_emphasis": {
-        "performance": 3.0,
+        "performance": 3,
         "functional_correctness": 1.4,
         "regression_risk": 1.4,
         "implementation_complexity": 0.4
@@ -200,17 +200,18 @@
       ],
       "min_complexity": "small",
       "stage_focus": {
-        "inspect": "Pin the exact API version, endpoint, method, schema and installed client library; consult current official documentation, never an invented endpoint.",
+        "inspect": "Identify the exact API and installed client distribution/version. Fetch official, version-matched API documentation and inspect the matching repository tag/source, examples, tests and changelog. Confirm every import, endpoint, schema, method and argument against the package installed in the target runtime; do not code from model memory or unversioned latest docs.",
         "implement": "Handle auth, pagination, timeouts, retries with backoff, rate limits and malformed responses; keep secrets in configuration, never in source or logs.",
-        "verify": "Exercise the real contract against fixtures or a mock; a live call only when authorized, with a timeout and one bounded attempt."
+        "verify": "Verify the API contract and package version against official docs for the installed release and the actual installed module/signatures; exercise behavior against fixtures or a mock. A live call only when authorized, with a timeout and one bounded attempt."
       },
       "verify": [
-        "endpoint, method, schema and library version confirmed against current documentation",
+        "package and client version, endpoint, method and schema confirmed against official version-matched documentation",
+        "imports and signatures confirmed against the actual installed package/source",
         "timeout, retry, rate limit and error mapping all have explicit behavior",
         "no secret appears in code, config samples or logs"
       ],
       "rubric_emphasis": {
-        "error_handling": 2.0,
+        "error_handling": 2,
         "security": 1.4,
         "compatibility": 1.5,
         "implementation_complexity": 0.4
@@ -255,12 +256,14 @@
       ],
       "min_complexity": "medium",
       "stage_focus": {
-        "inspect": "Identify library and fork versions, session type, handler registration order and filter overlap; trace the complete update-to-response path.",
+        "inspect": "Identify the exact Telegram library distribution, fork, version, import path and session type. Fetch the official docs for that version and inspect the matching fork/upstream tag, exported symbols, signatures, examples, tests and changelog. Verify the installed package source before relying on Pyrogram or another fork's API; trace handler registration order and filter overlap, then follow the complete update-to-response path.",
         "diagnose": "For media problems, follow the whole flow: download, process, metadata, caption, thumbnail, upload, edit. An isolated function is rarely the cause.",
         "implement": "Preserve file IDs, thumbnails, captions, dimensions, duration, MIME type, grouping and ordering unless the task changes them. Handle FloodWait with the server's own wait time, bounded retries and explicit peer resolution.",
-        "verify": "Test single item, bulk, missing metadata, duplicate delivery, partial failure and recovery; never against production chats."
+        "verify": "Test single item, bulk, missing metadata, duplicate delivery, partial failure and recovery. Confirm imported symbols and method signatures against the installed fork and version-matched official docs; never test against production chats."
       },
       "verify": [
+        "the exact library/fork and installed version are identified",
+        "imports, method signatures and parameters match the installed fork/source and its versioned docs",
         "captions, thumbnails and media metadata survive the full flow",
         "FloodWait, retries and duplicate updates are handled with bounds",
         "handler order and filter overlap checked against the real update types"
