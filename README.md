@@ -99,29 +99,42 @@ whatever the total says.
 
 ## Install
 
-Skill install (Claude Code, Cursor, Codex, Copilot and other agents supported by the
-skills CLI):
+### Fast project-local install (OpenCode)
+
+Run this from the root of the project where you want CES installed:
 
 ```bash
-npx skills add https://github.com/IamElite/ces/tree/main/skills/ces -g
+npx skills add https://github.com/IamElite/ces/tree/dev/skills/ces --agent opencode --copy --yes
 ```
 
-Project-local install: drop the `-g`. Update later:
+This installs the skill to `.agents/skills/ces/`. It fetches only the CES skill folder
+(`SKILL.md`, `workflow.py`, `strategies.json`, and `rubric.md`) instead of cloning
+the full repository with tests, plugin metadata and other development files.
+`--yes` skips interactive confirmation and `--copy` creates a normal project copy.
+
+For Codex, use the same command with `--agent codex`; its project skill path is also
+`.agents/skills/`.
+
+### Update later
+
+From the same project root:
 
 ```bash
-npx skills update ces -g
+npx skills update ces --yes
 ```
 
-As a Claude Code plugin:
+### Claude Code plugin install
 
-```
+```text
 /plugin marketplace add IamElite/ces
 /plugin install ces@ces
 ```
 
-Manual install: copy `skills/ces/` into the agent's skills directory, for example
-`~/.claude/skills/ces` for Claude Code. The four skill files travel together;
-`workflow.py` finds `strategies.json` and `rubric.md` next to itself.
+### Manual install
+
+Copy the complete `skills/ces/` directory into the agent's supported skill
+directory. Keep all four files together because `workflow.py` loads
+`strategies.json` and `rubric.md` from beside itself.
 
 ## Compatibility
 
