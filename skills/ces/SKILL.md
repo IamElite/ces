@@ -74,9 +74,42 @@ work outranks everything you do here. Then inspect with aim, not wholesale:
 - The real entry point, the modules on the task's path, their callers, and the tests
   that pin their behavior.
 - Configuration, dependencies (with installed versions), logs and runtime evidence.
+- Dependency manifests and lockfiles (for example `requirements*.txt`, `pyproject.toml`,
+  `poetry.lock`, `uv.lock`, `package.json`, lockfiles, go.mod or Cargo.lock), plus the
+  actual runtime package version and import location when a dependency is on the task path.
 
 Never invent a file, command, API, configuration key or convention. Read the smallest
 useful set of files first; expand only when the execution path demands it.
+
+**Dependency and API source-of-truth check.** Whenever a task adds, changes, debugs or
+optimizes use of a third-party package, SDK, framework, fork or external API, do not
+implement from model memory alone. First identify the exact dependency distribution,
+import/module name, fork or upstream, pinned version and actually installed version in
+the target environment. Do not assume that a fork exposes the same API as its upstream.
+
+Then research the API using live, authoritative sources:
+1. Open the official documentation for the installed/pinned release or versioned API.
+2. Inspect the official repository at the matching tag/commit, especially source,
+   exported symbols, function signatures, examples, tests and changelog/release notes.
+3. Inspect the package actually installed in the target environment (module path,
+   version, imports and relevant signatures/source) to confirm what will execute.
+4. Compare those sources. Confirm that every proposed import, class, method,
+   argument and behavior exists in the exact version/fork used by the project.
+
+Use official version-matched documentation and source as primary evidence; third-party
+posts are supplementary only. "Latest" documentation is not automatically compatible:
+if the project pins an older release, follow that release's API unless the user
+explicitly asks to upgrade. Never silently upgrade a dependency just to match newer
+documentation. If the installed version differs from the lockfile or deployment
+version, resolve that discrepancy before coding or clearly report the environment
+being targeted.
+
+Record the package/fork, version, official documentation URL and source/tag inspected.
+Cite those sources in the final report when external research informed the change.
+If live documentation or network access is unavailable, inspect the installed source
+and local metadata; do not fill gaps with confident guesses from training data. Mark
+what remains unverified and ask for the missing docs or environment access when it
+blocks a safe implementation.
 
 ### Stage 4 - Diagnose
 
@@ -87,6 +120,11 @@ hypotheses and say which is which. Fix causes, not symptoms: an unrelated guard,
 retry or fallback that silences a symptom is a bug added, not a fix. For features,
 this stage is a short walk of the seams the feature touches - skip it only when there
 is truly nothing to diagnose, and say so.
+
+When a dependency or SDK is involved, compare the observed runtime behavior with the
+version-matched official docs and the installed implementation. Trace the exact
+imported symbol and call signature; distinguish an upstream API from a fork-specific
+API. Treat remembered examples as hypotheses until confirmed against source.
 
 ### Stage 5 - Select
 
@@ -140,6 +178,9 @@ network behavior; for async work check cancellation, duplicate execution and
 cleanup. Add a focused regression test for every real bug fix. Never claim a check
 passed unless it actually ran and passed - report blocked checks with the exact
 command and what remains unverified. Record results in the engine when tracking.
+
+For dependency-backed code, verify each external symbol and argument against the
+version-matched documentation and installed package before relying on it.
 
 ### Stage 9 - Evaluate
 
@@ -238,6 +279,17 @@ Use the playbook that matches the task; they sharpen stages 3, 4, 7 and 8, they 
 replace the lifecycle. Long entries live in `strategies.json` - read the matching
 strategy there before planning work in these domains.
 
+- **Dependency and SDK research.** For any external package or SDK touched by the task,
+  identify the exact distribution, import name, fork and installed/pinned version.
+  Fetch the official docs for that release and inspect the matching upstream/fork
+  source, examples, tests and changelog. Confirm real imports and signatures against
+  the installed package (for Python, package metadata plus module path/signature/source;
+  use the equivalent package manager and runtime inspection for other languages).
+  Prefer sources for the exact installed version over unversioned "latest" docs.
+  Never transplant an API from a newer release or upstream project into an older
+  version/fork without proving compatibility or explicitly planning an upgrade.
+  If docs and installed source disagree, trust the installed runtime for current
+  behavior, investigate the mismatch, and report it. Do not guess from model memory.
 - **General development.** Any language and framework: trace functions, classes,
   modules, async flows and error boundaries end to end; check dependency versions and
   configuration before blaming code; keep refactors behavior-pinned with tests first.
