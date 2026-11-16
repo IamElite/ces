@@ -117,6 +117,20 @@ report files as a substitute for doing the work. Consider CPU, RAM, disk, networ
 concurrency, timeouts, cancellation and cleanup before adding anything that runs
 unattended. Track every touched file, in state or in your notes.
 
+**Code cleanliness and comments.** Keep implementation code focused and free of noise.
+Do not add decorative or redundant comments (`#`, `//`, `/* */`) or unnecessary
+docstrings (`'''` / `\"\"\"`) just to narrate obvious code. Remove stale,
+misleading or redundant comments when touching the relevant code, but preserve
+comments and docstrings that explain non-obvious behavior, document public APIs,
+carry license terms, or are required by tools (for example, type-checker, linter,
+formatter and coverage directives). Never blindly strip all comments or
+triple-quoted text: docstrings and runtime string literals can be meaningful.
+
+When the user asks for **pure code** or **code only**, return only the requested
+source code: no introduction, explanation, Markdown fences, labels or trailing
+commentary. Omit optional comments and docstrings from that output, while keeping
+anything required for the code to work correctly.
+
 ### Stage 8 - Verify
 
 Run the most relevant existing checks first, then the checks this change demands:
