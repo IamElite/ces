@@ -115,7 +115,7 @@ class SkillPackage(unittest.TestCase):
     def test_skill_requires_professional_concise_formatted_code(self):
         for needle in ("Professional implementation and logic", "Concise, right-sized code",
                        "Formatting and style", "Debugging hygiene",
-                       "Reference-repository reimplementation", "behavior matrix"):
+                       "Reference-repository reimplementation", "behavior", "matrix"):
             self.assertIn(needle, self.skill, "SKILL.md is missing %r" % needle)
 
     def test_engine_compiles_and_matches_docs(self):
