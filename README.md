@@ -27,70 +27,39 @@ resumable state and scored quality gates.
 
 ## Operational logging: owner visibility without spam
 
-CES guides agents to add and preserve logs for the important events an owner needs
-to understand how an application is being used and what its work is doing. Logs should
-tell the story of meaningful user actions, task starts, outcomes and failures - not
-dump every internal step.
+CES guides agents to add and preserve logs for meaningful user actions, task
+transitions, important milestones, outcomes and failures. Logs should help an owner
+understand what the application is doing without becoming a transcript of internal
+execution.
 
-For example, in a leech bot, an owner should be able to see a task being added, the
-file being processed, and whether the leech operation completed or failed:
-
-```text
-[17-Nov-26 08:42:16 PM] [INFO] - New task added by user: Elite
-                      ├── Task ID: 481
-                      └── File Name: Naruto Shippuden EP 01.mkv
-
-[17-Nov-26 08:42:19 PM] [INFO] - Download started: Naruto Shippuden EP 01.mkv
-                      ├── Task ID: 481
-                      └── Source: Telegram
-
-[17-Nov-26 08:45:52 PM] [INFO] - Download completed: Naruto Shippuden EP 01.mkv
-                      ├── Task ID: 481
-                      └── File Size: 1.42 GB
-
-[17-Nov-26 08:45:54 PM] [INFO] - Upload started: Naruto Shippuden EP 01.mkv
-                      └── Destination: Telegram
-
-[17-Nov-26 08:47:10 PM] [INFO] - Task completed successfully: Naruto Shippuden EP 01.mkv
-
-[17-Nov-26 08:48:03 PM] [ERROR] - Download failed: Naruto Shippuden EP 02.mkv
-                      ├── Task ID: 482
-                      └── Reason: Source link returned 404
-```
-
-The same principle applies to other applications, backends and automations:
-
-- Record important user actions and meaningful task or state transitions, with enough
-  context to identify the actor and resource when appropriate.
-- Log meaningful milestones for long-running work, not every loop, chunk, polling
-  cycle, progress tick or internal function call.
-- Emit an event once at its natural ownership boundary; avoid duplicate logs from
-  handlers, services and workers reporting the same action.
-- Reuse the project's logger and keep intentional CLI output. Use `INFO` for important
-  activity, `WARNING` for recoverable issues, `ERROR` for failures and `DEBUG` for
-  low-level diagnostics that should not flood normal production logs.
+- Record important actions with useful context, such as the actor and resource when
+  appropriate.
+- Log meaningful milestones for long-running operations, not every loop, chunk,
+  polling cycle, progress tick or internal function call.
+- Emit each event once at its natural ownership boundary; avoid duplicate messages
+  from handlers, services and workers reporting the same action.
+- Reuse the project's existing logger. Use `INFO` for meaningful activity,
+  `SUCCESS` for successful operation outcomes, `WARNING` for recoverable issues,
+  `ERROR` for failures and `DEBUG` for low-level diagnostics.
 - Keep messages concise and actionable. Never expose credentials, tokens or sensitive
-  personal data in logs.
-
-The goal is simple: an owner reviewing the logs can understand who did what and what
-happened, without being buried in noise. This is a coding rule enforced in detail by
-`skills/ces/SKILL.md`; it does not require adding a logging framework to every project.
+  personal data.
 
 ### Log message presentation
 
-Use a consistent, timestamped console/file format:
+For new or revised application logs, CES specifies a compact, single-line format with
+fixed-width timestamp and severity columns. Use a readable date and 12-hour time with
+seconds, pad severity names so every event message starts at the same position, and
+keep each event on one line. Do not use tree connectors, continuation blocks,
+decorative borders or multi-line detail layouts.
 
-```text
-[17-Nov-26 08:42:16 PM] [INFO] - Message describing the event
-```
+Use event symbols consistently: `+` for a task added, `↓` for a download started,
+`↑` for an upload started, `✓` for an operation completed, `✔` for a task completed,
+`✗` for a failure, `!` for a warning, `»` for processing, `×` for cancellation,
+`↻` for retry and `—` for an intentionally skipped item. Include useful context in
+the same line only when it materially helps identify or understand the event.
 
-Use a readable date and 12-hour time with seconds, followed by the severity and a
-natural-language event sentence. When the event needs more context, put related
-details on indented continuation lines with clear labels, such as `Task ID`,
-`File Name`, `Source`, `Destination`, `File Size` or `Reason`. Keep the first line
-useful on its own, and include only fields that help identify or understand that event.
-Do not turn every log into a multi-line block. Simple events stay on one line; use
-details only when they materially improve owner visibility.
+The presentation rules are defined in detail in `skills/ces/SKILL.md`. They do not
+require adding a logging framework or replacing a project's existing logger.
 
 ## Documentation stays in sync
 
