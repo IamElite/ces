@@ -124,6 +124,20 @@ class SkillPackage(unittest.TestCase):
                        "Emit each event once", "Do not log every loop iteration",
                        "owner visibility with low noise", "Never log passwords"):
             self.assertIn(needle, self.skill, "SKILL.md is missing logging rule %r" % needle)
+    def test_skill_requires_readme_sync_for_user_visible_changes(self):
+        for needle in ("README documentation sync", "root `README.md`",
+                       "user-visible feature", "bug fix",
+                       "commands, configuration, compatibility",
+                       "strictly internal", "relevant feature-specific guide"):
+            self.assertIn(needle, self.skill, "SKILL.md is missing documentation rule %r" % needle)
+
+    def test_final_review_checks_readme_sync(self):
+        review = self.skill.split("### Stage 10 - Final review", 1)[1].split(
+            "### Stage 11 - Report", 1)[0]
+        self.assertIn("root README", review)
+        self.assertIn("user-visible fix or addition", review)
+        self.assertIn("accurately", review)
+
 
 
     def test_engine_compiles_and_matches_docs(self):
@@ -573,6 +587,13 @@ class PluginMetadata(unittest.TestCase):
                        "Emit an event once", "who did what and what",
                        "SKILL.md"):
             self.assertIn(needle, self.readme, "README is missing operational logging guidance %r" % needle)
+    def test_readme_documents_docs_sync_policy(self):
+        for needle in ("Documentation stays in sync", "first stop for users",
+                       "Every user-visible feature, bug fix",
+                       "update this README in the same change",
+                       "internal-only refactors"):
+            self.assertIn(needle, self.readme, "README is missing documentation policy %r" % needle)
+
 
     def test_gitignore_excludes_state_but_not_sources(self):
         gi = read(os.path.join(REPO, ".gitignore"))

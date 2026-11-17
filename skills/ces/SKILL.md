@@ -182,6 +182,17 @@ project conventions (for example, gofmt for Go). Run the formatter/check mode an
 relevant lint or type checks when available. Do not add a formatter dependency or
 reformat unrelated files just for this task.
 
+**README documentation sync.** Treat the root `README.md` as the user's first entry
+point, not an optional afterthought. In the same change as every user-visible feature
+addition, bug fix, or change to behavior, commands, configuration, compatibility or
+workflows, update the README to explain what changed and how users should use or
+understand it. Add a concise example or configuration detail when it makes the change
+clearer. Keep the explanation accurate and user-focused; do not dump internal
+implementation details or duplicate the full source documentation. If a change is
+strictly internal and has no user-visible effect, avoid README noise. When the
+repository has a relevant feature-specific guide, update that too. Never leave a
+user-facing change documented only in code, commit messages or agent instructions.
+
 **Debugging hygiene.** Temporary prints, ad-hoc tracing, profiling hooks, commented-out
 experiments and debug-only branches must be removed before delivery. Do not silence
 errors or hide operational failures just to produce clean logs.
@@ -266,8 +277,11 @@ requested behavior is delivered, no unrelated user change was overwritten, no
 accidental files, secrets, temporary debugging code, dead code or unnecessary
 duplication remain, public contracts still hold, and the change stayed inside the
 requested scope. Confirm changed files follow the repository's formatter and style
-rules, and that simplification has not removed required behavior or safeguards. Fix
-what the review finds before reporting.
+rules, and that simplification has not removed required behavior or safeguards.
+For every user-visible fix or addition, verify the root README and relevant feature
+docs explain the change accurately, with usable examples or settings where needed;
+do not skip this because the implementation itself is already documented in code.
+Fix what the review finds before reporting.
 
 ### Stage 11 - Report
 

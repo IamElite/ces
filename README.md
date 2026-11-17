@@ -60,6 +60,14 @@ The goal is simple: an owner reviewing the logs can understand who did what and 
 happened, without being buried in noise. This is a coding rule enforced in detail by
 `skills/ces/SKILL.md`; it does not require adding a logging framework to every project.
 
+## Documentation stays in sync
+
+The root README is the first stop for users. Every user-visible feature, bug fix or
+change to behavior, commands, configuration, compatibility or workflows should update
+this README in the same change, with a short explanation and a usage example when
+helpful. Keep it accurate and user-focused; internal-only refactors do not need
+documentation noise. Update a relevant feature guide as well when one exists.
+
 ## Architecture
 
 Arena-inspired and deliberately multi-file. `SKILL.md` is the orchestrator; the
