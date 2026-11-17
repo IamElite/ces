@@ -585,18 +585,20 @@ class PluginMetadata(unittest.TestCase):
 
     def test_readme_documents_operational_logging_without_spam(self):
         for needle in ("Operational logging: owner visibility without spam",
-                       "New task added by user", "Download started", "Download completed",
-                       "Task completed successfully", "Download failed",
-                       "not every loop", "Emit an event once",
-                       "who did what and what", "SKILL.md"):
+                       "meaningful user actions", "not every loop",
+                       "Emit each event once", "existing logger",
+                       "SUCCESS", "DEBUG", "SKILL.md"):
             self.assertIn(needle, self.readme, "README is missing operational logging guidance %r" % needle)
 
-    def test_readme_documents_readable_timestamped_log_style(self):
-        for needle in ("Log message presentation", "[17-Nov-26 08:42:16 PM] [INFO] -",
-                       "12-hour time with seconds", "natural-language event sentence",
-                       "indented continuation lines", "Task ID", "File Name",
-                       "Do not turn every log into a multi-line block"):
-            self.assertIn(needle, self.readme, "README is missing log presentation guidance %r" % needle)
+    def test_readme_documents_single_line_log_style(self):
+        for needle in ("Log message presentation", "single-line format",
+                       "fixed-width timestamp and severity columns",
+                       "tree connectors", "event symbols consistently",
+                       "`+`", "`↓`", "`↑`", "`✓`", "`✔`",
+                       "`✗`", "`!`", "`»`", "`×`", "`↻`", "`—`"):
+            self.assertIn(needle, self.readme, "README is missing single-line log guidance %r" % needle)
+        for obsolete in ("Naruto Shippuden", "Task ID: 481", "├──", "indented continuation lines"):
+            self.assertNotIn(obsolete, self.readme, "README still contains obsolete demo logging %r" % obsolete)
 
     def test_readme_documents_docs_sync_policy(self):
         for needle in ("Documentation stays in sync", "first stop for users",
