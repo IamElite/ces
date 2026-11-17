@@ -183,9 +183,38 @@ relevant lint or type checks when available. Do not add a formatter dependency o
 reformat unrelated files just for this task.
 
 **Debugging hygiene.** Temporary prints, ad-hoc tracing, profiling hooks, commented-out
-experiments and debug-only branches must be removed before delivery. Keep only
-production logging that is useful, appropriately leveled and consistent with the
-project. Do not silence errors or hide operational failures just to produce clean logs.
+experiments and debug-only branches must be removed before delivery. Do not silence
+errors or hide operational failures just to produce clean logs.
+
+**Meaningful operational activity logging.** Logs are an owner-facing record of the
+important things happening in the application, not a transcript of every line of code.
+Identify the small set of events that lets an owner understand who is using the system,
+which meaningful actions or tasks were started, and how those actions ended. Add
+missing logs for important events; preserve useful existing operational logs.
+
+- At meaningful business or user-action boundaries, record the action and its useful
+  context. For a task workflow, this commonly means the task was accepted or added,
+  the task started, and the task completed or failed. Include the relevant actor,
+  task/resource identifier or file name, and a concise failure reason when applicable.
+- Log progress only at meaningful milestones when it helps the owner understand a
+  long-running operation. Do not log every loop iteration, chunk, polling cycle,
+  percentage update, function call or internal state that does not help explain what
+  the system is doing.
+- Emit each event once at the natural ownership boundary. Avoid duplicate messages
+  from a handler, service and worker all reporting the same event. Prefer the
+  project's existing logger and structured fields; keep intentional CLI output when
+  it is part of the user-facing command contract.
+- Use levels with intent: INFO for important activity and outcomes, WARNING for
+  recoverable abnormal conditions that deserve attention, ERROR for failed
+  operations, and DEBUG for low-level diagnostics that should not flood normal
+  production logs.
+- Keep messages concise and actionable. Never log passwords, tokens, credentials,
+  private file contents or unnecessary personal data.
+
+The goal is owner visibility with low noise: an owner reviewing the logs should be
+able to follow the important user actions, tasks, state changes and failures without
+being buried in routine implementation details. Do not add a log to every small
+operation merely to increase log coverage.
 
 **Code cleanliness and comments.** Keep implementation code focused and free of noise.
 Do not add decorative or redundant comments (`#`, `//`, `/* */`) or unnecessary

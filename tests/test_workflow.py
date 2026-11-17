@@ -117,6 +117,14 @@ class SkillPackage(unittest.TestCase):
                        "Formatting and style", "Debugging hygiene",
                        "Reference-repository reimplementation", "behavior", "matrix"):
             self.assertIn(needle, self.skill, "SKILL.md is missing %r" % needle)
+    def test_skill_requires_meaningful_operational_activity_logging(self):
+        for needle in ("Meaningful operational activity logging",
+                       "owner-facing record", "task was accepted or added",
+                       "task started", "task completed or failed",
+                       "Emit each event once", "Do not log every loop iteration",
+                       "owner visibility with low noise", "Never log passwords"):
+            self.assertIn(needle, self.skill, "SKILL.md is missing logging rule %r" % needle)
+
 
     def test_engine_compiles_and_matches_docs(self):
         self.assertEqual(len(W.STAGES), 11)
