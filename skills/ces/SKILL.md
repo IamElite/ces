@@ -222,18 +222,43 @@ missing logs for important events; preserve useful existing operational logs.
 - Keep messages concise and actionable. Never log passwords, tokens, credentials,
   private file contents or unnecessary personal data.
 
-**Readable log presentation.** Follow the project's existing logging conventions when
-they are already established. For new or revised application logs, use a consistent
-timestamped format with a readable date and 12-hour time including seconds, followed
-by the severity and a natural-language event sentence. A suitable default shape is
-`[17-Nov-26 08:42:16 PM] [INFO] - Download started: Example.mkv`. Keep the first line
-understandable on its own. When an event needs context, add indented continuation
-lines with clearly labeled fields such as task ID, file name, source, destination,
-size or failure reason. Use a tree-like connector layout only for related details,
-not as decoration. Keep simple events on one line; do not force every event into a
-multi-line block. Do not include reference-project names, owners, branding or
-attribution in the target project's logger or documentation. This is a presentation
-convention, not a reason to replace a working logging framework or add a new one.
+**Readable log presentation.** Follow the project's existing logging framework
+and conventions; change presentation, not the logging framework, unless the user
+explicitly requests otherwise. For new or revised application logs, use one compact
+single-line format with fixed-width, consistently aligned columns:
+
+- Timestamp: `[ DD-MMM-YY hh:mm:ss AM/PM  -  `
+- Severity: a fixed-width field such as `INFO`, `SUCCESS`, `WARNING`, `ERROR` or
+  `DEBUG`, followed by `]`.
+- Event: two spaces, the event symbol, one space, then a concise natural-language
+  message.
+
+Use a readable date and 12-hour time with seconds. Keep the timestamp, severity and
+message start aligned identically on every line; pad shorter severity names rather
+than allowing the event column to shift. Use these event symbols consistently:
+
+- `+` - a task or work item was added or accepted.
+- `↓` - a download or inbound transfer started.
+- `↑` - an upload or outbound transfer started.
+- `✓` - an operation completed successfully, such as a download, upload or rename.
+- `✔` - the complete task or workflow finished successfully.
+- `✗` - an operation failed.
+- `!` - a recoverable warning needs attention.
+- `»` - processing or an internal operational step.
+- `×` - an operation was cancelled.
+- `↻` - an operation is being retried.
+- `—` - an item was intentionally skipped.
+
+Use `INFO` for meaningful activity, `SUCCESS` for successful operation outcomes,
+`WARNING` for recoverable abnormal conditions, `ERROR` for failed operations and
+`DEBUG` for low-level diagnostics. Keep each event on one line: no tree connectors,
+continuation blocks, decorative borders or multi-line detail layouts. Include useful
+context in the same line only when it materially helps identify or understand the
+event. Do not invent missing details, repeat the same event at multiple layers, or
+log routine internal activity at INFO level. Do not include reference-project names,
+owners, branding or attribution in the target project's logger or documentation.
+This is a presentation convention, not a reason to replace a working logging
+framework or add a new one.
 
 The goal is owner visibility with low noise: an owner reviewing the logs should be
 able to follow the important user actions, tasks, state changes and failures without
