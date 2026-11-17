@@ -585,7 +585,7 @@ class PluginMetadata(unittest.TestCase):
 
     def test_readme_documents_operational_logging_without_spam(self):
         for needle in ("Operational logging: owner visibility without spam",
-                       "Task added by user", "Download started", "Download completed",
+                       "New task added by user", "Download started", "Download completed",
                        "Task completed successfully", "Download failed",
                        "not every loop", "Emit an event once",
                        "who did what and what", "SKILL.md"):
