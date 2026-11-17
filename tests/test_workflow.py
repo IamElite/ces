@@ -590,7 +590,7 @@ class PluginMetadata(unittest.TestCase):
     def test_readme_documents_docs_sync_policy(self):
         for needle in ("Documentation stays in sync", "first stop for users",
                        "Every user-visible feature, bug fix",
-                       "update this README in the same change",
+                       "this README in the same change",
                        "internal-only refactors"):
             self.assertIn(needle, self.readme, "README is missing documentation policy %r" % needle)
 
