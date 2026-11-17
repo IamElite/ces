@@ -36,10 +36,26 @@ For example, in a leech bot, an owner should be able to see a task being added, 
 file being processed, and whether the leech operation completed or failed:
 
 ```text
-[INFO] Task added | user_id=12345 | file=Episode-01.mkv
-[INFO] Leech started | task_id=481 | file=Episode-01.mkv
-[INFO] Leech completed | task_id=481 | file=Episode-01.mkv
-[ERROR] Leech failed | task_id=482 | file=Episode-02.mkv | reason=Download failed
+[17-Nov-26 08:42:16 PM] [INFO] - New task added by user: Elite
+                      ├── Task ID: 481
+                      └── File Name: Naruto Shippuden EP 01.mkv
+
+[17-Nov-26 08:42:19 PM] [INFO] - Download started: Naruto Shippuden EP 01.mkv
+                      ├── Task ID: 481
+                      └── Source: Telegram
+
+[17-Nov-26 08:45:52 PM] [INFO] - Download completed: Naruto Shippuden EP 01.mkv
+                      ├── Task ID: 481
+                      └── File Size: 1.42 GB
+
+[17-Nov-26 08:45:54 PM] [INFO] - Upload started: Naruto Shippuden EP 01.mkv
+                      └── Destination: Telegram
+
+[17-Nov-26 08:47:10 PM] [INFO] - Task completed successfully: Naruto Shippuden EP 01.mkv
+
+[17-Nov-26 08:48:03 PM] [ERROR] - Download failed: Naruto Shippuden EP 02.mkv
+                      ├── Task ID: 482
+                      └── Reason: Source link returned 404
 ```
 
 The same principle applies to other applications, backends and automations:
@@ -59,6 +75,22 @@ The same principle applies to other applications, backends and automations:
 The goal is simple: an owner reviewing the logs can understand who did what and what
 happened, without being buried in noise. This is a coding rule enforced in detail by
 `skills/ces/SKILL.md`; it does not require adding a logging framework to every project.
+
+### Log message presentation
+
+Use a consistent, timestamped console/file format:
+
+```text
+[17-Nov-26 08:42:16 PM] [INFO] - Message describing the event
+```
+
+Use a readable date and 12-hour time with seconds, followed by the severity and a
+natural-language event sentence. When the event needs more context, put related
+details on indented continuation lines with clear labels, such as `Task ID`,
+`File Name`, `Source`, `Destination`, `File Size` or `Reason`. Keep the first line
+useful on its own, and include only fields that help identify or understand that event.
+Do not turn every log into a multi-line block. Simple events stay on one line; use
+details only when they materially improve owner visibility.
 
 ## Documentation stays in sync
 

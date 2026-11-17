@@ -222,6 +222,19 @@ missing logs for important events; preserve useful existing operational logs.
 - Keep messages concise and actionable. Never log passwords, tokens, credentials,
   private file contents or unnecessary personal data.
 
+**Readable log presentation.** Follow the project's existing logging conventions when
+they are already established. For new or revised application logs, use a consistent
+timestamped format with a readable date and 12-hour time including seconds, followed
+by the severity and a natural-language event sentence. A suitable default shape is
+`[17-Nov-26 08:42:16 PM] [INFO] - Download started: Example.mkv`. Keep the first line
+understandable on its own. When an event needs context, add indented continuation
+lines with clearly labeled fields such as task ID, file name, source, destination,
+size or failure reason. Use a tree-like connector layout only for related details,
+not as decoration. Keep simple events on one line; do not force every event into a
+multi-line block. Do not include reference-project names, owners, branding or
+attribution in the target project's logger or documentation. This is a presentation
+convention, not a reason to replace a working logging framework or add a new one.
+
 The goal is owner visibility with low noise: an owner reviewing the logs should be
 able to follow the important user actions, tasks, state changes and failures without
 being buried in routine implementation details. Do not add a log to every small

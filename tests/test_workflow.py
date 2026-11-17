@@ -122,7 +122,10 @@ class SkillPackage(unittest.TestCase):
                        "owner-facing record", "task was accepted or added",
                        "task started", "task completed or failed",
                        "Emit each event once", "Do not log every loop iteration",
-                       "owner visibility with low noise", "Never log passwords"):
+                       "owner visibility with low noise", "Never log passwords",
+                       "Readable log presentation", "12-hour time including seconds",
+                       "natural-language event sentence", "indented continuation",
+                       "Do not include reference-project names"):
             self.assertIn(needle, self.skill, "SKILL.md is missing logging rule %r" % needle)
     def test_skill_requires_readme_sync_for_user_visible_changes(self):
         for needle in ("README documentation sync", "root `README.md`",
@@ -582,11 +585,19 @@ class PluginMetadata(unittest.TestCase):
 
     def test_readme_documents_operational_logging_without_spam(self):
         for needle in ("Operational logging: owner visibility without spam",
-                       "Task added", "Leech started", "Leech completed",
-                       "Leech failed", "not every loop",
-                       "Emit an event once", "who did what and what",
-                       "SKILL.md"):
+                       "Task added by user", "Download started", "Download completed",
+                       "Task completed successfully", "Download failed",
+                       "not every loop", "Emit an event once",
+                       "who did what and what", "SKILL.md"):
             self.assertIn(needle, self.readme, "README is missing operational logging guidance %r" % needle)
+
+    def test_readme_documents_readable_timestamped_log_style(self):
+        for needle in ("Log message presentation", "[17-Nov-26 08:42:16 PM] [INFO] -",
+                       "12-hour time with seconds", "natural-language event sentence",
+                       "indented continuation lines", "Task ID", "File Name",
+                       "Do not turn every log into a multi-line block"):
+            self.assertIn(needle, self.readme, "README is missing log presentation guidance %r" % needle)
+
     def test_readme_documents_docs_sync_policy(self):
         for needle in ("Documentation stays in sync", "first stop for users",
                        "Every user-visible feature, bug fix",
