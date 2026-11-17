@@ -25,6 +25,41 @@ resumable state and scored quality gates.
 10. **Review** the final diff for scope, secrets, regressions and accidental edits.
 11. **Report** what changed, why, what was tested, what remains.
 
+## Operational logging: owner visibility without spam
+
+CES guides agents to add and preserve logs for the important events an owner needs
+to understand how an application is being used and what its work is doing. Logs should
+tell the story of meaningful user actions, task starts, outcomes and failures - not
+dump every internal step.
+
+For example, in a leech bot, an owner should be able to see a task being added, the
+file being processed, and whether the leech operation completed or failed:
+
+```text
+[INFO] Task added | user_id=12345 | file=Episode-01.mkv
+[INFO] Leech started | task_id=481 | file=Episode-01.mkv
+[INFO] Leech completed | task_id=481 | file=Episode-01.mkv
+[ERROR] Leech failed | task_id=482 | file=Episode-02.mkv | reason=Download failed
+```
+
+The same principle applies to other applications, backends and automations:
+
+- Record important user actions and meaningful task or state transitions, with enough
+  context to identify the actor and resource when appropriate.
+- Log meaningful milestones for long-running work, not every loop, chunk, polling
+  cycle, progress tick or internal function call.
+- Emit an event once at its natural ownership boundary; avoid duplicate logs from
+  handlers, services and workers reporting the same action.
+- Reuse the project's logger and keep intentional CLI output. Use `INFO` for important
+  activity, `WARNING` for recoverable issues, `ERROR` for failures and `DEBUG` for
+  low-level diagnostics that should not flood normal production logs.
+- Keep messages concise and actionable. Never expose credentials, tokens or sensitive
+  personal data in logs.
+
+The goal is simple: an owner reviewing the logs can understand who did what and what
+happened, without being buried in noise. This is a coding rule enforced in detail by
+`skills/ces/SKILL.md`; it does not require adding a logging framework to every project.
+
 ## Architecture
 
 Arena-inspired and deliberately multi-file. `SKILL.md` is the orchestrator; the

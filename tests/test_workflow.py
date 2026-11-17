@@ -566,6 +566,14 @@ class PluginMetadata(unittest.TestCase):
         self.assertIn("rubric.md", self.readme)
         self.assertIn("MIT License. See", self.readme)
 
+    def test_readme_documents_operational_logging_without_spam(self):
+        for needle in ("Operational logging: owner visibility without spam",
+                       "Task added", "Leech started", "Leech completed",
+                       "Leech failed", "not every loop",
+                       "Emit an event once", "who did what and what",
+                       "SKILL.md"):
+            self.assertIn(needle, self.readme, "README is missing operational logging guidance %r" % needle)
+
     def test_gitignore_excludes_state_but_not_sources(self):
         gi = read(os.path.join(REPO, ".gitignore"))
         self.assertIn(".ces/", gi)
