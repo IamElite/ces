@@ -112,6 +112,12 @@ class SkillPackage(unittest.TestCase):
                        "init --task", "next", "resume", "score --strategy"):
             self.assertIn(needle, self.skill, "SKILL.md does not mention %r" % needle)
 
+    def test_skill_requires_professional_concise_formatted_code(self):
+        for needle in ("Professional implementation and logic", "Concise, right-sized code",
+                       "Formatting and style", "Debugging hygiene",
+                       "Reference-repository reimplementation", "behavior matrix"):
+            self.assertIn(needle, self.skill, "SKILL.md is missing %r" % needle)
+
     def test_engine_compiles_and_matches_docs(self):
         self.assertEqual(len(W.STAGES), 11)
         self.assertEqual(W.STATE_VERSION, 1)
@@ -129,7 +135,7 @@ class StrategyCatalog(TempDir):
         self.assertGreaterEqual(len(ids), 14)
         for sid in ("bug-investigation", "feature-implementation", "refactoring",
                     "telegram-bot-development", "media-processing", "deployment-troubleshooting",
-                    "code-review"):
+                    "code-review", "behavior-preserving-reimplementation"):
             self.assertIn(sid, ids, "the spec's core strategies must exist")
 
     def test_every_strategy_is_well_formed(self):
@@ -155,6 +161,16 @@ class StrategyCatalog(TempDir):
         payload = json.loads(self.ok("strategies", "--json"))
         self.assertEqual(len(payload["strategies"]), len(W.load_strategies()["strategies"]))
         self.fails("strategies", "no-such-strategy")
+
+    def test_behavior_reimplementation_strategy_requires_behavioral_parity(self):
+        strategy = W.strategy_by_id(W.load_strategies(), "behavior-preserving-reimplementation")
+        focus = strategy["stage_focus"]
+        for stage in ("inspect", "diagnose", "plan", "implement", "verify"):
+            self.assertIn(stage, focus)
+        self.assertIn("behavior", focus["plan"].lower())
+        self.assertIn("idiomatic", focus["implement"].lower())
+        self.assertIn("parity", focus["verify"].lower())
+        self.assertGreaterEqual(len(strategy["verify"]), 4)
 
     def test_validate(self):
         self.ok("validate")

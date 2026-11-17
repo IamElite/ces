@@ -16,7 +16,7 @@ resumable state and scored quality gates.
 2. **Classify** the task small, medium or complex, and set the process weight accordingly.
 3. **Inspect** the real project: instructions, entry points, callers, config, dependencies, git state.
 4. **Diagnose** to the first confirmed divergence between actual and expected behavior.
-5. **Select** a fitting strategy from sixteen catalog entries (bug investigation, database
+5. **Select** a fitting strategy from seventeen catalog entries (bug investigation, database
    engineering, Telegram bots, media pipelines, scraping, deployment, security review, ...).
 6. **Plan** milestones that each end in verifiable state - complex work only.
 7. **Implement** the smallest complete change that fits the existing architecture.
@@ -36,7 +36,7 @@ ces/
 │   └── ces/
 │       ├── SKILL.md          # the orchestrator: lifecycle, rules, playbooks
 │       ├── workflow.py       # executable state engine (CLI, stdlib Python 3.8+)
-│       ├── strategies.json   # 16 strategies: match signals, stage focus, verify checklists, rubric emphasis
+│       ├── strategies.json   # 17 strategies: match signals, stage focus, verify checklists, rubric emphasis
 │       └── rubric.md         # 12 weighted quality dimensions, anchors, fatal rule
 ├── tests/
 │   └── test_workflow.py      # behavior tests: full lifecycle through the CLI, guards, integrity
@@ -81,7 +81,7 @@ storing it.
 
 ### `strategies.json` - the strategy catalog
 
-Sixteen strategies from `focused-change` to `complex-multi-stage`. Each entry says
+Seventeen strategies from `focused-change` to `complex-multi-stage`. Each entry says
 what it matches, the signals that identify it, which lifecycle stages carry the
 weight, a verification checklist, and `rubric_emphasis` multipliers that shift the
 rubric weights when scoring with that strategy. Edit freely; run

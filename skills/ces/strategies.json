@@ -386,6 +386,40 @@
       }
     },
     {
+      "id": "behavior-preserving-reimplementation",
+      "name": "Behavior-preserving reimplementation",
+      "matches": "A reference repository or existing implementation is supplied and the user wants the same required functionality or logic reproduced in another project, codebase or language, preferably with a cleaner and more idiomatic design.",
+      "when": [
+        "the user asks to make a feature work the same as a supplied repository or reference implementation",
+        "the source implementation contains unnecessary complexity, debugging leftovers or conventions that should not be copied blindly",
+        "behavior, interfaces, data formats or edge cases must remain compatible while the implementation is rebuilt"
+      ],
+      "min_complexity": "medium",
+      "stage_focus": {
+        "inspect": "Trace the reference implementation from its entry points through callers, dependencies, configuration and tests. Identify observable behavior, contracts, side effects, data formats and edge cases; inspect exact dependency/fork versions and official docs where relevant.",
+        "diagnose": "Separate required behavior from incidental implementation choices, duplication, dead code, temporary debugging and historical workarounds. Confirm what must be preserved instead of assuming every source-code detail is intentional.",
+        "plan": "Create a compact behavior-parity matrix for normal inputs, edge cases, errors, side effects and compatibility. Map each requirement to a target implementation point and a verification case.",
+        "implement": "Rebuild the behavior using idiomatic patterns and architecture in the target project. Preserve required contracts and safeguards, but do not line-translate or copy needless layers, debug scaffolding, dead code or accidental complexity. Prefer the smallest readable complete design, not a line-count target.",
+        "verify": "Run parity tests for each behavior-matrix item, including important failure paths. Use reference fixtures or safe differential tests where possible; verify formatting, lint and types using the target project's configured tools."
+      },
+      "verify": [
+        "the required observable behavior and public contracts match the reference",
+        "normal inputs, edge cases, side effects and error behavior have parity coverage",
+        "the target implementation is idiomatic, readable and no more complex than the requirement needs",
+        "no temporary debugging code, dead paths, accidental dependencies or needless wrappers remain",
+        "formatting and relevant lint, type and test checks pass"
+      ],
+      "rubric_emphasis": {
+        "functional_correctness": 2,
+        "requirement_completeness": 1.8,
+        "code_quality": 1.7,
+        "compatibility": 1.6,
+        "maintainability": 1.4,
+        "regression_risk": 1.3,
+        "implementation_complexity": 0.5
+      }
+    },
+    {
       "id": "complex-multi-stage",
       "name": "Complex multi-stage project",
       "matches": "Several subsystems change together: feature plus migration plus deployment, protocol changes across services, multi-session builds.",

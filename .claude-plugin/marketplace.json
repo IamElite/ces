@@ -14,7 +14,7 @@
     {
       "name": "ces",
       "source": "./",
-      "description": "CES - Coding Expert System: an eleven-stage engineering lifecycle for coding agents, with a sixteen-strategy catalog, resumable state and a twelve-dimension quality rubric.",
+      "description": "CES - Coding Expert System: an eleven-stage engineering lifecycle for coding agents, with a seventeen-strategy catalog, resumable state and a twelve-dimension quality rubric.",
       "version": "3.0.0",
       "author": {
         "name": "IamElite",

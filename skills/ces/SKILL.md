@@ -128,7 +128,7 @@ API. Treat remembered examples as hypotheses until confirmed against source.
 
 ### Stage 5 - Select
 
-Open `strategies.json` and compare the task against the catalog - sixteen strategies
+Open `strategies.json` and compare the task against the catalog - seventeen strategies
 from bug investigation through database engineering, Telegram bots, media pipelines,
 scraping, deployment and code review. Each entry tells you what it matches, the
 signals to look for, the stages that carry the weight, what to verify, and how it
@@ -154,6 +154,38 @@ retries, caches, workers or fallbacks without evidence they are needed, no plan 
 report files as a substitute for doing the work. Consider CPU, RAM, disk, network,
 concurrency, timeouts, cancellation and cleanup before adding anything that runs
 unattended. Track every touched file, in state or in your notes.
+
+**Professional implementation and logic.** Do not settle for code that merely runs.
+Translate the requirements into explicit behavior and invariants, then choose a sound,
+idiomatic design for the project's language, framework and scale. Keep responsibilities
+cohesive, names meaningful, data flow understandable and error handling at the right
+boundaries. Validate untrusted input where it enters, preserve required failure
+semantics, and avoid god-functions, hidden side effects, broad exception swallowing,
+magic values and clever tricks that make the logic harder to review. Use abstractions
+when they remove real duplication or isolate a real boundary; do not create layers,
+classes or helpers just to make the code look enterprise-grade.
+
+**Concise, right-sized code.** Optimize for the smallest clear and complete solution,
+not the fewest lines. Remove duplicated work, redundant wrappers, dead paths,
+unnecessary dependencies, speculative options and checks that add no protection.
+Do not expand a simple operation into a framework or several helper layers without a
+measurable reason. Do not minify code, chain unrelated statements or use unreadable
+one-liners to hit a line-count target. Never remove validation, cleanup, error handling
+or edge-case behavior merely to make the diff shorter. A short, readable solution
+that preserves the contract is better than copied complexity; essential safeguards
+are better than artificially small code.
+
+**Formatting and style.** Inspect the repository's formatter, linter and editor
+configuration before editing. Format changed files with the project's configured
+formatter; if none exists, use the language's standard formatter and established
+project conventions (for example, gofmt for Go). Run the formatter/check mode and
+relevant lint or type checks when available. Do not add a formatter dependency or
+reformat unrelated files just for this task.
+
+**Debugging hygiene.** Temporary prints, ad-hoc tracing, profiling hooks, commented-out
+experiments and debug-only branches must be removed before delivery. Keep only
+production logging that is useful, appropriately leveled and consistent with the
+project. Do not silence errors or hide operational failures just to produce clean logs.
 
 **Code cleanliness and comments.** Keep implementation code focused and free of noise.
 Do not add decorative or redundant comments (`#`, `//`, `/* */`) or unnecessary
@@ -202,9 +234,11 @@ with reasons. A verified fatal flaw stops delivery until it is fixed.
 
 Inspect the final diff against the working tree you found at stage 3. Confirm: the
 requested behavior is delivered, no unrelated user change was overwritten, no
-accidental files, secrets, debug output or unrelated reformatting crept in, public
-contracts still hold, and the change stayed inside the requested scope. Fix what the
-review finds before reporting.
+accidental files, secrets, temporary debugging code, dead code or unnecessary
+duplication remain, public contracts still hold, and the change stayed inside the
+requested scope. Confirm changed files follow the repository's formatter and style
+rules, and that simplification has not removed required behavior or safeguards. Fix
+what the review finds before reporting.
 
 ### Stage 11 - Report
 
@@ -290,6 +324,17 @@ strategy there before planning work in these domains.
   version/fork without proving compatibility or explicitly planning an upgrade.
   If docs and installed source disagree, trust the installed runtime for current
   behavior, investigate the mismatch, and report it. Do not guess from model memory.
+- **Reference-repository reimplementation.** When asked to reproduce a repository's
+  feature or behavior, inspect its actual entry points, call graph, data contracts,
+  configuration, dependencies, tests and observable edge cases. Build a behavior
+  matrix covering inputs, outputs, side effects, formats, errors and compatibility
+  requirements before implementing. Preserve the required behavior and external
+  contracts, not the source repository's accidental complexity or line-by-line
+  structure. Implement idiomatically in the target project's stack and conventions;
+  remove debug leftovers, dead code and needless wrappers without deleting required
+  validation or failure handling. Verify parity with focused fixtures, regression
+  tests or safe differential tests against the reference behavior. Do not assume the
+  reference is wrong or correct based only on style; prove what behavior is required.
 - **General development.** Any language and framework: trace functions, classes,
   modules, async flows and error boundaries end to end; check dependency versions and
   configuration before blaming code; keep refactors behavior-pinned with tests first.
