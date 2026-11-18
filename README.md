@@ -15,7 +15,7 @@ resumable state and scored quality gates.
 1. **Understand** the request and its constraints; never re-ask what was already given.
 2. **Classify** the task small, medium or complex, and set the process weight accordingly.
 3. **Inspect** the real project: instructions, entry points, callers, config, dependencies, git state.
-4. **Diagnose** to the first confirmed divergence between actual and expected behavior.
+4. **Diagnose** with reproducible evidence and trace to the first confirmed divergence; failed fixes trigger a deeper investigation, not another guess.
 5. **Select** a fitting strategy from seventeen catalog entries (bug investigation, database
    engineering, Telegram bots, media pipelines, scraping, deployment, security review, ...).
 6. **Plan** milestones that each end in verifiable state - complex work only.
@@ -24,6 +24,28 @@ resumable state and scored quality gates.
 9. **Evaluate** the change against a twelve-dimension rubric, weighted by the chosen strategy.
 10. **Review** the final diff for scope, secrets, regressions and accidental edits.
 11. **Report** what changed, why, what was tested, what remains.
+
+
+## Evidence-driven repository engineering
+
+CES requires agents to understand the affected architecture before editing, not just
+open the file named in a prompt. Inspection maps the relevant entry points, callers,
+data flow, shared state, dependencies, contracts and tests in proportion to the task.
+Adding a feature means proving where it integrates; modifying code means checking its
+consumers; removing code means checking direct, indirect and dynamic references.
+
+For bugs, agents must reproduce the symptom where practical, trace the real execution
+path and identify the first evidenced divergence before implementing a fix. Confirmed
+facts, hypotheses and unknowns stay separate. A failed fix is recorded with its
+hypothesis and verification result. After two unsuccessful attempts, CES requires a
+fresh root-cause review and a wider investigation instead of repeating speculative
+patches. Verification must cover the original reproduction, a regression test and
+important adjacent integration paths; an isolated helper test or swallowed exception
+does not prove the system is fixed.
+
+The depth stays proportional: small isolated edits get targeted caller/test inspection;
+medium and complex changes get a wider change-surface map. CES does not require
+unnecessary whole-repository audits or extra ceremony for trivial work.
 
 ## Operational logging: owner visibility without spam
 
