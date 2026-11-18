@@ -37,14 +37,18 @@
       ],
       "min_complexity": "small",
       "stage_focus": {
-        "diagnose": "Reproduce first. Trace the real path from input to output, form one hypothesis at a time, and confirm the first divergence before touching code. Do not patch the symptom.",
+        "diagnose": "Reproduce first and trace the complete execution path to the first evidenced divergence. Separate facts from hypotheses. Keep an attempt ledger; after two unsuccessful fixes, stop patching, reject failed assumptions and widen the investigation across callers, async/concurrency, state, configuration, environment and dependency boundaries.",
         "implement": "Fix the confirmed cause with the smallest complete change; never hide it behind an unrelated guard, retry or fallback.",
-        "verify": "Re-run the reproduction, add a regression test for the exact failure, and check the paths the fix could disturb."
+        "verify": "Re-run the original reproduction, add a regression test that fails before the fix, and test affected callers and adjacent contracts. A passing isolated helper test or suppressed exception is not proof.",
+        "inspect": "Map the affected feature's entry point, callers/callees, shared state, configuration, dependency versions and adjacent tests before isolating the failure. Keep the map proportional, but do not inspect only the crashing function."
       },
       "verify": [
-        "the original reproduction now passes",
-        "a regression test covers the exact failure",
-        "the fix did not change unrelated behavior"
+        "the original reproduction now passes in the target environment or the limitation is explicitly recorded",
+        "a regression test fails before the fix and passes after it",
+        "the first divergence/root cause is supported by code, logs, trace or runtime evidence",
+        "failed attempts are not repeated; disproven hypotheses and changed investigation scope are recorded",
+        "affected callers, downstream behavior and important failure paths remain correct",
+        "the fix did not hide the failure with broad exception handling, retries or fallback behavior"
       ],
       "rubric_emphasis": {
         "root_cause_accuracy": 2.5,
@@ -64,15 +68,17 @@
       ],
       "min_complexity": "small",
       "stage_focus": {
-        "inspect": "Find the seams the feature attaches to: existing routes, handlers, models, conventions and error styles. Reuse them.",
-        "plan": "Cut the feature into milestones that each end in working, verifiable state.",
-        "implement": "Build the narrow feature that satisfies the stated criteria; do not build speculative generality.",
-        "verify": "Test success, invalid input and failure paths; check the feature composes with existing behavior."
+        "inspect": "Map the existing architecture around the extension point: entry points, callers, data ownership, shared services, dependency versions, contracts and tests. Search for existing implementations before creating new ones.",
+        "plan": "Define acceptance criteria and a compact integration map: changed modules, data/API contracts, compatibility constraints, failure behavior and tests that prove composition with existing features.",
+        "implement": "Extend the established architecture at its intended seam. Reuse existing services and conventions; avoid parallel paths, duplicate dependencies and speculative abstractions.",
+        "verify": "Test acceptance criteria, invalid input, failure behavior and integration with existing callers/consumers. Verify public contracts and relevant regression paths, not only the new function in isolation."
       },
       "verify": [
-        "stated acceptance criteria are demonstrated one by one",
-        "invalid input and failure paths behave sanely",
-        "existing behavior is untouched"
+        "acceptance criteria are demonstrated against the real integration path",
+        "the chosen extension point and affected modules match the existing architecture",
+        "callers, data/API contracts and compatibility are checked",
+        "invalid input and failure paths behave correctly",
+        "existing behavior and adjacent integrations remain intact"
       ],
       "rubric_emphasis": {
         "requirement_completeness": 1.8,
@@ -91,15 +97,16 @@
       ],
       "min_complexity": "medium",
       "stage_focus": {
-        "inspect": "Map the callers and the tests that pin current behavior. If no safety net exists, building one comes before moving anything.",
+        "inspect": "Map callers, implementations, registrations, dynamic references, data contracts and tests before moving or deleting code. Establish the behavior baseline first.",
         "plan": "Sequence the moves so the project stays working after every step.",
-        "implement": "One mechanical step at a time; no functional change rides along with a refactor.",
-        "verify": "The pre-agreed checks give identical results after every step, not just at the end."
+        "implement": "Make bounded structural changes while preserving the mapped contracts; remove code only after references and indirect usage are checked.",
+        "verify": "Run behavior-pinning tests and search for stale imports, registrations, references and compatibility breaks after the refactor."
       },
       "verify": [
         "behavior checks are identical before and after",
         "no unrelated redesign got mixed in",
-        "public interfaces kept compatible unless asked otherwise"
+        "public interfaces kept compatible unless asked otherwise",
+        "dynamic references, registrations and downstream consumers are checked before removal"
       ],
       "rubric_emphasis": {
         "maintainability": 2.2,
