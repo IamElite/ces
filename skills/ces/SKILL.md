@@ -81,6 +81,31 @@ work outranks everything you do here. Then inspect with aim, not wholesale:
 Never invent a file, command, API, configuration key or convention. Read the smallest
 useful set of files first; expand only when the execution path demands it.
 
+**Repository map and change-surface analysis.** Inspection must establish enough of the
+real system to make a safe change; reading only the file named in the prompt is not
+enough when behavior crosses boundaries. Scale the map to risk:
+
+- For a small, isolated change, inspect the target, its direct callers/callees, nearby
+  tests and relevant conventions.
+- For medium or complex work, trace the affected feature from its entry point through
+  handlers/controllers, services, domain logic, persistence, external integrations and
+  outputs. Identify ownership boundaries, shared state, lifecycle/async behavior,
+  configuration, feature flags and error paths that participate in that flow.
+- Before adding, removing or replacing code, search for references, registrations,
+  imports, subclasses, implementations, callers, configuration keys, serialized data,
+  CLI/API contracts and tests. Check whether apparently unused code is loaded
+  dynamically or used by plugins, reflection, jobs or external consumers.
+- Build a compact change-surface map: files/modules involved, their responsibility,
+  call/data flow, public contracts, dependencies and tests. It may be a short note for
+  small work; tracked medium/complex work should record it as findings or decisions.
+  Expand inspection when evidence reveals another boundary; do not inventory the
+  entire repository without a reason.
+
+Do not start implementation until the relevant architecture and change surface are
+understood well enough to explain where the change belongs and what existing behavior
+it may affect. If a required file, runtime, log or environment is inaccessible, state
+the limitation and do not pretend the inspection is complete.
+
 **Dependency and API source-of-truth check.** Whenever a task adds, changes, debugs or
 optimizes use of a third-party package, SDK, framework, fork or external API, do not
 implement from model memory alone. First identify the exact dependency distribution,
@@ -126,6 +151,34 @@ version-matched official docs and the installed implementation. Trace the exact
 imported symbol and call signature; distinguish an upstream API from a fork-specific
 API. Treat remembered examples as hypotheses until confirmed against source.
 
+**Evidence gate before a fix.** A diagnosis is ready for implementation only when the
+agent can state (a) the expected behavior, (b) the observed behavior and reproduction
+or strongest available evidence, (c) the exact first point where they diverge, and
+(d) why that point causes the symptom. Trace both directions as needed: callers and
+inputs into the failing code, then downstream effects and error handling out of it.
+Use stack traces, logs, tests, runtime inspection and minimal probes as evidence. Keep
+confirmed facts, hypotheses and unknowns explicitly separate. A plausible explanation
+is not a confirmed root cause. If the issue cannot be reproduced, document the
+attempts and evidence, narrow the hypothesis, and avoid claiming certainty.
+
+**Repeated-failure escalation.** Keep a short attempt ledger for any issue that has
+already resisted a fix: each attempt, the hypothesis it tested, the exact change,
+the verification run and why it failed or what it proved. Never repeat a failed
+approach with a differently worded prompt or another speculative patch. When a
+reproduction or fix fails, roll back or isolate the ineffective change, revisit the
+evidence, reject disproven assumptions and widen the trace to adjacent callers,
+shared state, async/concurrency paths, configuration, environment and dependency
+boundaries. After two unsuccessful fix attempts, stop patching and perform a fresh
+root-cause review; request missing logs, runtime access or one focused clarification
+only if that evidence is genuinely required. Report the blocker and verified facts
+rather than shipping a guess. The count is an escalation trigger, not permission to
+make two speculative fixes.
+
+**Feature integration diagnosis.** New work also needs a short integration analysis:
+identify the extension point, existing behavior that must remain, data/API contracts,
+failure behavior, and the tests that prove the new path composes with existing
+features. A feature is not understood merely because its new function can run alone.
+
 ### Stage 5 - Select
 
 Open `strategies.json` and compare the task against the catalog - seventeen strategies
@@ -154,6 +207,16 @@ retries, caches, workers or fallbacks without evidence they are needed, no plan 
 report files as a substitute for doing the work. Consider CPU, RAM, disk, network,
 concurrency, timeouts, cancellation and cleanup before adding anything that runs
 unattended. Track every touched file, in state or in your notes.
+
+Before editing, write down the intended change boundary and the contracts it must
+preserve. For additions, identify the existing extension point and wire the new path
+through the project's established architecture rather than creating a parallel
+implementation. For modifications, check all callers and downstream consumers.
+For removals, prove references and registrations are gone or intentionally migrated;
+check persisted data, compatibility, dynamic loading and cleanup implications. For
+dependency changes, justify why the existing dependency cannot meet the requirement
+before adding or replacing one. Keep the diff focused, but do not confuse a small diff
+with a complete fix.
 
 **Professional implementation and logic.** Do not settle for code that merely runs.
 Translate the requirements into explicit behavior and invariants, then choose a sound,
@@ -291,6 +354,18 @@ command and what remains unverified. Record results in the engine when tracking.
 
 For dependency-backed code, verify each external symbol and argument against the
 version-matched documentation and installed package before relying on it.
+
+**Proof of integration, not just local success.** Verify the exact user-visible
+reproduction or acceptance criteria after the change. Add a regression test that
+would fail on the original bug, then exercise the changed path and the most important
+adjacent callers/contracts. For additions, test successful use plus invalid input,
+failure and interaction with existing behavior. For removals, test that dependent
+flows still work and stale references are absent. For crash fixes, verify the process
+or operation completes cleanly and inspect logs/exit status for hidden errors; a
+caught exception or suppressed log is not proof of a fix. If the real environment is
+unavailable, run the closest safe fixture/test and clearly label the production
+behavior as unverified. A passing unit test for an isolated helper does not prove an
+end-to-end integration works.
 
 ### Stage 9 - Evaluate
 
